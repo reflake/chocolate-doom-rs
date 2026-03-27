@@ -1,0 +1,12 @@
+[package]
+name = "doom-rs"
+version = "0.1.0"
+edition = "2024"
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.11.0"
+rstest   = "0.26.1"
+
+[lib]
+crate-type=["staticlib"]

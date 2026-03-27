@@ -35,7 +35,7 @@
 #include "r_local.h"
 #include "r_sky.h"
 
-
+#include "m_random.h"
 
 
 
@@ -765,6 +765,8 @@ void R_ExecuteSetViewSize (void)
 
 void R_Init (void)
 {
+	InitRandom();
+
     R_InitData ();
     printf (".");
     R_InitPointToAngle ();

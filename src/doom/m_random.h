@@ -20,9 +20,13 @@
 #ifndef __M_RANDOM__
 #define __M_RANDOM__
 
+typedef struct random_s
+{
+	unsigned char index;
+	const unsigned char *table;
+} random_t;
 
-#include "doomtype.h"
-
+void InitRandom (void);
 
 // Returns a number from 0 to 255,
 // from a lookup table.
@@ -36,5 +40,15 @@ void M_ClearRandom (void);
 
 // Defined version of P_Random() - P_Random()
 int P_SubRandom (void);
+
+extern random_t random;
+
+extern random_t CreateRandom();
+
+extern int NextRandom(random_t *random);
+
+extern int NextSubRandom(random_t *random);
+
+extern void ClearRandom(random_t *random);
 
 #endif

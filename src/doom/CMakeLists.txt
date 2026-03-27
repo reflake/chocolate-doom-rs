@@ -1,3 +1,13 @@
+include(FetchContent)
+
+FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG v0.6 # Optionally specify a commit hash, version tag or branch here
+)
+# Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
+FetchContent_MakeAvailable(Corrosion)
+
 add_library(doom STATIC
             am_map.c        am_map.h
             deh_ammo.c
@@ -11,7 +21,7 @@ add_library(doom STATIC
             deh_thing.c
             deh_weapon.c
                             d_englsh.h
-            d_items.c       d_items.h
+            		        d_items.h
             d_main.c        d_main.h
             d_net.c
                             doomdata.h
@@ -86,6 +96,9 @@ else()
         list(APPEND SDL_LINK_LIBS SDL2_net::SDL2_net)
     endif()
 endif()
-target_link_libraries(doom ${SDL_LINK_LIBS})
+
+corrosion_import_crate(MANIFEST_PATH Cargo.toml)
+
+target_link_libraries(doom ${SDL_LINK_LIBS} doom_rs)
 set_target_properties(doom PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 set_target_properties(doom PROPERTIES LINK_FLAGS "${SDL_FLAGS}")

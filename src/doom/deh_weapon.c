@@ -52,7 +52,7 @@ static void *DEH_WeaponStart(deh_context_t *context, char *line)
         return NULL;
     }
     
-    return &weaponinfo[weapon_number];
+    return GetWeaponInfo(weapon_number);
 }
 
 static void DEH_WeaponParseLine(deh_context_t *context, char *line, void *tag)
@@ -85,7 +85,7 @@ static void DEH_WeaponSHA1Sum(sha1_context_t *context)
 
     for (i=0; i<NUMWEAPONS ;++i)
     {
-        DEH_StructSHA1Sum(context, &weapon_mapping, &weaponinfo[i]);
+        DEH_StructSHA1Sum(context, &weapon_mapping, GetWeaponInfo(i));
     }
 }
 

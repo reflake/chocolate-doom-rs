@@ -177,9 +177,9 @@ P_GiveWeapon
 	player->weaponowned[weapon] = true;
 
 	if (deathmatch)
-	    P_GiveAmmo (player, weaponinfo[weapon].ammo, 5);
+	    P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 5);
 	else
-	    P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
+	    P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 2);
 	player->pendingweapon = weapon;
 
 	if (player == &players[consoleplayer])
@@ -187,14 +187,14 @@ P_GiveWeapon
 	return false;
     }
 	
-    if (weaponinfo[weapon].ammo != am_noammo)
+    if (GetWeaponInfo(weapon)->ammo != am_noammo)
     {
 	// give one clip with a dropped weapon,
 	// two clips with a found weapon
 	if (dropped)
-	    gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 1);
+	    gaveammo = P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 1);
 	else
-	    gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
+	    gaveammo = P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 2);
     }
     else
 	gaveammo = false;

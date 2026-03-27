@@ -268,9 +268,6 @@ extern int		skyflatnum;
 
 // Netgame stuff (buffers and pointers, i.e. indices).
 
-
-extern	int		rndindex;
-
 extern  ticcmd_t       *netcmds;
 
 
