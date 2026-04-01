@@ -3,31 +3,30 @@
 // DESCRIPTION:
 //	Fixed point arithemtics, implementation.
 //
-
-use std::{i32, ops::{Add, AddAssign, Sub, SubAssign, BitXor, Div, DivAssign, Mul, MulAssign, Shl, Shr}};
-
+use std::{i32, ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign}};
 
 //
 // Fixed point, 32bit as 16.16.
 //
-const FRACBITS: i32	= 16;
-const FRACUNIT: i32	= 1 << FRACBITS;
+pub const FRACBITS: i32	= 16;
+pub const FRACUNIT: i32	= 1 << FRACBITS;
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct fixed(i32);
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd)]
+pub struct fixed(pub i32);
 
 impl Add for fixed {
 	type Output = fixed;
 
 	fn add(self, rhs: fixed) -> fixed {
-		fixed(self.0 + rhs.0)
+		fixed(self.0.wrapping_add(rhs.0))
 	}
 }
 
 impl AddAssign for fixed {
 	fn add_assign(&mut self, rhs: fixed) {
-		self.0 += rhs.0
+		self.0 = self.0.wrapping_add(rhs.0)
 	}
 }
 
@@ -35,13 +34,13 @@ impl Sub for fixed {
 	type Output = fixed;
 
 	fn sub(self, rhs: fixed) -> fixed {
-		fixed(self.0 - rhs.0)
+		fixed(self.0.wrapping_sub(rhs.0))
 	}
 }
 
 impl SubAssign for fixed {
 	fn sub_assign(&mut self, rhs: fixed) {
-		self.0 -= rhs.0
+		self.0 = self.0.wrapping_sub(rhs.0)
 	}
 }
 

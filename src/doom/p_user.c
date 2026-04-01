@@ -43,26 +43,6 @@
 
 boolean		onground;
 
-
-//
-// P_Thrust
-// Moves the given origin along a given angle.
-//
-void
-P_Thrust
-( player_t*	player,
-  angle_t	angle,
-  fixed_t	move ) 
-{
-    angle >>= ANGLETOFINESHIFT;
-    
-    player->mo->momx += FixedMul(move,finecosine[angle]); 
-    player->mo->momy += FixedMul(move,finesine[angle]);
-}
-
-
-
-
 //
 // P_CalcHeight
 // Calculate the walking / running height adjustment
@@ -140,28 +120,22 @@ void P_CalcHeight (player_t* player)
 //
 void P_MovePlayer (player_t* player)
 {
-    ticcmd_t*		cmd;
+    ticcmd_t* cmd;
 	
     cmd = &player->cmd;
-	
-    player->mo->angle += (cmd->angleturn<<FRACBITS);
 
     // Do not let the player control movement
     //  if not onground.
-    onground = (player->mo->z <= player->mo->floorz);
+    onground = PlayerOnGround(player->mo->z, player->mo->floorz);
 	
-    if (cmd->forwardmove && onground)
-	P_Thrust (player, player->mo->angle, cmd->forwardmove*2048);
-    
-    if (cmd->sidemove && onground)
-	P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048);
+	MovePlayer(&player->mo->momx, &player->mo->angle, &player->cmd, onground);
 
     if ( (cmd->forwardmove || cmd->sidemove) 
 	 && player->mo->state == &states[S_PLAY] )
     {
-	P_SetMobjState (player->mo, S_PLAY_RUN1);
+		P_SetMobjState (player->mo, S_PLAY_RUN1);
     }
-}	
+}
 
 
 

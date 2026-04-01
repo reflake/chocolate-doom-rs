@@ -85,7 +85,6 @@ void P_DropWeapon (player_t* player);
 //
 void	P_PlayerThink (player_t* player);
 
-
 //
 // P_MOBJ
 //
@@ -100,6 +99,9 @@ extern int		itemrespawntime[ITEMQUESIZE];
 extern int		iquehead;
 extern int		iquetail;
 
+extern void MovePlayer(fixed_t* move_vel, angle_t* angle, ticcmd_t* cmd, boolean onground);
+
+extern boolean PlayerOnGround(fixed_t player_z, fixed_t floor_z);
 
 void P_RespawnSpecials (void);
 
