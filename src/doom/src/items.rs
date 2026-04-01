@@ -6,7 +6,7 @@ use crate::info::StateEnum;
 // The defined weapons,
 //  including a marker indicating
 //  user has not changed weapon.
-#[allow(nonstandard_style)]
+#[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
 pub enum WeaponType
 {
@@ -29,7 +29,7 @@ pub enum WeaponType
 
 
 // Ammunition types defined.
-#[allow(nonstandard_style)]
+#[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
 pub enum AmmoType
 {

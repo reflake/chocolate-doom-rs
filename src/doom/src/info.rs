@@ -1,4 +1,4 @@
-#[allow(nonstandard_style)]
+#[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
 pub enum StateEnum
 {
