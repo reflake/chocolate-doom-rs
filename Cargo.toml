@@ -1,0 +1,12 @@
+[package]
+name = "chocolate-doom"
+version = "0.1.0"
+edition = "2024"
+path = "src/lib.rs"
+
+[workspace]
+members = ["src",
+	"src",
+	"src/doom"
+]
+resolver = "2"
