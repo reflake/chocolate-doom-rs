@@ -16,6 +16,7 @@
 //	Moving object handling. Spawn functions.
 //
 
+#include "p_mobj.h"
 #include <stdio.h>
 
 #include "i_system.h"
@@ -89,6 +90,21 @@ P_SetMobjState
     return true;
 }
 
+boolean
+P_MobjStateEqual
+( mobj_t*	mobj,
+  statenum_t	state )
+{
+	state_t*	st;
+
+	if (state == S_NULL)
+	{
+	return mobj->state == (state_t *) S_NULL;
+	}
+
+	st = &states[state];
+	return mobj->state == st;
+}
 
 //
 // P_ExplodeMissile  
@@ -386,7 +402,43 @@ void P_ZMovement (mobj_t* mo)
     }
 } 
 
+void* P_TeleportByLineTag(line_t* line)
+{	
+    mobj_t*	m;
+    thinker_t*	thinker;
+    sector_t*	sector;
+	int i;
+	int tag = line->tag;
+    for (i = 0; i < numsectors; i++)
+    {
+		if (sectors[ i ].tag == tag )
+		{
+			for (thinker = thinkercap.next;
+			thinker != &thinkercap;
+			thinker = thinker->next)
+			{
+				// not a mobj
+				if (thinker->function.acp1 != (actionf_p1)P_MobjThinker)
+					continue;	
 
+				m = (mobj_t *)thinker;
+				
+				// not a teleportman
+				if (m->type != MT_TELEPORTMAN )
+					continue;		
+
+				sector = m->subsector->sector;
+				// wrong sector
+				if (sector-sectors != i )
+					continue;
+
+				return m;
+			}
+		}
+	}
+
+	return (mobj_t*) NULL;
+}
 
 //
 // P_NightmareRespawn

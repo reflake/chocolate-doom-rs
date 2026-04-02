@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "doomstat.h"
+#include "d_mode.h"
 
 
 // Game Mode - identify IWAD as shareware, retail etc.
@@ -30,6 +31,8 @@ GameVariant_t   gamevariant = vanilla;
 // Set if homebrew PWAD stuff has been added.
 boolean	modifiedgame;
 
-
+GameVersion_t GetGameVersion() {
+    return gameversion;
+}
 
 

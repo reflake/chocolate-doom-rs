@@ -120,21 +120,11 @@ void P_CalcHeight (player_t* player)
 //
 void P_MovePlayer (player_t* player)
 {
-    ticcmd_t* cmd;
-	
-    cmd = &player->cmd;
-
     // Do not let the player control movement
     //  if not onground.
     onground = PlayerOnGround(player->mo->z, player->mo->floorz);
 	
-	MovePlayer(&player->mo->momx, &player->mo->angle, &player->cmd, onground);
-
-    if ( (cmd->forwardmove || cmd->sidemove) 
-	 && player->mo->state == &states[S_PLAY] )
-    {
-		P_SetMobjState (player->mo, S_PLAY_RUN1);
-    }
+	MovePlayer(player->mo, &player->mo->momx, &player->mo->angle, &player->cmd, onground);
 }
 
 

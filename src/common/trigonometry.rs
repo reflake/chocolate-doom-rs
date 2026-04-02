@@ -57,7 +57,7 @@ impl SubAssign for ang {
 }
 
 #[cfg(test)]
-mod test {
+mod angle_tests {
 	use std::fmt::Debug;
 
 	use rstest::rstest;
@@ -90,5 +90,12 @@ mod test {
 		let a1 = ang::degree(deg1);
 		let a2 = ang::degree(deg2);
 		assert_eq!(a1 + a2, ang::degree(expected));
+	}
+
+	#[rstest]
+	#[case(0x4000u16, 90.0)]
+	#[case(0xC000u16, 270.0)]
+	fn from_hi_angle(#[case] hi_angle: u16, #[case] expected: f64) {
+		assert_eq!(ang::from_hi(hi_angle as i16).0, ang::degree(expected).0);
 	}
 }

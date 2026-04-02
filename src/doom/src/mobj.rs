@@ -1,0 +1,355 @@
+use bitflags::bitflags;
+use common::{fixed::fixed, trigonometry::ang};
+
+use crate::{info::StateEnum, player::Player};
+
+unsafe extern "C" { 
+	pub fn P_SetMobjState( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
+
+	pub fn P_MobjStateEqual( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
+
+	pub fn P_SpawnMobj(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut std::ffi::c_void;
+}
+
+#[repr(C)]
+pub struct Thinker
+{
+    prev: *mut Thinker,
+    next: *mut Thinker,
+    func: *mut std::ffi::c_void,
+}
+
+#[repr(C, packed)]
+pub struct MapThing
+{
+    x: i16,
+    y: i16,
+    angle: i16,
+    obj_type: i16,
+    options: i16,
+}
+
+#[repr(C)]
+pub struct Mobj
+{
+    // List: thinker links.
+    pub thinker: Thinker,
+
+    // Info for drawing: position.
+    pub x: fixed,
+    pub y: fixed,
+    pub z: fixed,
+
+    // More list: links in sector (if needed)
+    pub snext: *mut Mobj,
+    pub sprev: *mut Mobj,
+
+    //More drawing info: to determine current sprite.
+    pub angle: ang,	            // orientation
+    // spriteenum_t
+    pub sprite: std::ffi::c_int,// used to find patch_t and flip value
+    pub frame: i32,	            // might be ORed with FF_FULLBRIGHT
+
+    // Interaction info, by BLOCKMAP.
+    // Links in blocks (if needed).
+    pub bnext: *mut Mobj,
+    pub bprev: *mut Mobj,
+    
+    //struct subsector_s*	
+    pub subsector: *mut std::ffi::c_void,
+
+    // The closest interval over all contacted Sectors.
+	pub floorz:   fixed,
+	pub ceilingz: fixed,
+
+    // For movement checking.
+	pub radius: fixed,
+	pub height: fixed,	
+
+    // Momentums, used to update position.
+	pub momx: fixed,
+	pub momy: fixed,
+	pub momz: fixed,
+
+    // If == validcount, already checked.
+    validcount: i32,
+
+	obj_type: MobjType,
+    //mobjinfo_t*		
+    info: *mut std::ffi::c_void,	// &mobjinfo[mobj->type]
+    
+    tics: i32,	// state tic counter
+    //state_t*		
+    pub state: *mut std::ffi::c_void,
+    pub flags: Flags,
+    pub health: i32,
+
+    // Movement direction, movement generation (zig-zagging).
+    movedir:   i32,	// 0-7
+    movecount: i32,	// when 0, select a new dir
+
+    // Thing being chased/attacked (or NULL),
+    // also the originator for missiles.	
+    target: *mut Mobj,
+
+    // Reaction time: if non 0, don't attack yet.
+    // Used by player to freeze a bit after teleporting.
+    pub reactiontime: i32,  
+
+    // If >0, the target will be chased
+    // no matter what (even if shot)
+    threshold: i32,
+
+    // Additional info record for player avatars only.
+    // Only valid if type == MT_PLAYER
+    pub player: *mut Player,
+
+    // Player number last looked for.
+    lastlook: i32,
+
+    // For nightmare respawn.
+    // mapthing_t
+	spawnpoint: MapThing,
+
+    // Thing being chased/attacked for tracers.
+    tracer: *mut Mobj,
+    
+}
+
+//
+// Misc. mobj flags
+//
+bitflags! {
+    #[repr(C)]
+	#[allow(nonstandard_style, dead_code)]
+	pub struct Flags : u32
+	{
+		// Call P_SpecialThing when touched.
+		const SPECIAL	 = 1;
+		// Blocks.
+		const SOLID		 = 2;
+		// Can be hit.
+		const SHOOTABLE	 = 4;
+		// Don't use the sector links (invisible but touchable).
+		const NOSECTOR	 = 8;
+		// Don't use the blocklinks (inert but displayable)
+		const NOBLOCKMAP = 16;                    
+
+		// Not to be activated by sound, deaf monster.
+		const AMBUSH		= 32;
+		// Will try to attack right back.
+		const JUSTHIT		= 64;
+		// Will take at least one step before attacking.
+		const JUSTATTACKED	= 128;
+		// On level spawning (initial position),
+		//  hang from ceiling instead of stand on floor.
+		const SPAWNCEILING	= 256;
+		// Don't apply gravity (every tic),
+		//  that is, object will float, keeping current height
+		//  or changing it actively.
+		const NOGRAVITY		= 512;
+
+		// Movement flags.
+		// This allows jumps from high places.
+		const DROPOFF		= 0x400;
+		// For players, will pick up items.
+		const PICKUP		= 0x800;
+		// Player cheat. ???
+		const NOCLIP		= 0x1000;
+		// Player: keep info about sliding along walls.
+		const SLIDE			= 0x2000;
+		// Allow moves to any height, no gravity.
+		// For active floaters, e.g. cacodemons, pain elementals.
+		const FLOAT			= 0x4000;
+		// Don't cross lines
+		//   ??? or look at heights on teleport.
+		const TELEPORT		= 0x8000;
+		// Don't hit same species, explode on block.
+		// Player missiles as well as fireballs of various kinds.
+		const MISSILE		= 0x10000;	
+		// Dropped by a demon, not level spawned.
+		// E.g. ammo clips dropped by dying former humans.
+		const DROPPED		= 0x20000;
+		// Use fuzzy draw (shadow demons or spectres),
+		//  temporary player invisibility powerup.
+		const SHADOW		= 0x40000;
+		// Flag: don't bleed when shot (use puff),
+		//  barrels and shootable furniture shall not bleed.
+		const NOBLOOD		= 0x80000;
+		// Don't stop moving halfway off a step,
+		//  that is, have dead bodies slide down all the way.
+		const CORPSE		= 0x100000;
+		// Floating to a height for a move, ???
+		//  don't auto float to target's height.
+		const INFLOAT		= 0x200000;
+
+		// On kill, count this enemy object
+		//  towards intermission kill total.
+		// Happy gathering.
+		const COUNTKILL	= 0x400000;
+		
+		// On picking up, count this item object
+		//  towards intermission item total.
+		const COUNTITEM	= 0x800000;
+
+		// Special handling: skull in flight.
+		// Neither a cacodemon nor a missile.
+		const SKULLFLY		= 0x1000000;
+
+		// Don't spawn this object
+		//  in death match mode (e.g. key cards).
+		const NOTDMATCH    	= 0x2000000;
+
+		// Player sprites in multiplayer modes are modified
+		//  using an internal color lookup table for re-indexing.
+		// If 0x4 0x8 or 0xc,
+		//  use a translation table for player colormaps
+		const TRANSLATION  	= 0xc000000;
+		// Hmm ???.
+		const TRANSSHIFT	= 26;
+	}
+}
+
+#[allow(nonstandard_style, dead_code)]
+#[repr(u32)]
+pub enum MobjType {
+    MT_PLAYER,
+    MT_POSSESSED,
+    MT_SHOTGUY,
+    MT_VILE,
+    MT_FIRE,
+    MT_UNDEAD,
+    MT_TRACER,
+    MT_SMOKE,
+    MT_FATSO,
+    MT_FATSHOT,
+    MT_CHAINGUY,
+    MT_TROOP,
+    MT_SERGEANT,
+    MT_SHADOWS,
+    MT_HEAD,
+    MT_BRUISER,
+    MT_BRUISERSHOT,
+    MT_KNIGHT,
+    MT_SKULL,
+    MT_SPIDER,
+    MT_BABY,
+    MT_CYBORG,
+    MT_PAIN,
+    MT_WOLFSS,
+    MT_KEEN,
+    MT_BOSSBRAIN,
+    MT_BOSSSPIT,
+    MT_BOSSTARGET,
+    MT_SPAWNSHOT,
+    MT_SPAWNFIRE,
+    MT_BARREL,
+    MT_TROOPSHOT,
+    MT_HEADSHOT,
+    MT_ROCKET,
+    MT_PLASMA,
+    MT_BFG,
+    MT_ARACHPLAZ,
+    MT_PUFF,
+    MT_BLOOD,
+    MT_TFOG,
+    MT_IFOG,
+    MT_TELEPORTMAN,
+    MT_EXTRABFG,
+    MT_MISC0,
+    MT_MISC1,
+    MT_MISC2,
+    MT_MISC3,
+    MT_MISC4,
+    MT_MISC5,
+    MT_MISC6,
+    MT_MISC7,
+    MT_MISC8,
+    MT_MISC9,
+    MT_MISC10,
+    MT_MISC11,
+    MT_MISC12,
+    MT_INV,
+    MT_MISC13,
+    MT_INS,
+    MT_MISC14,
+    MT_MISC15,
+    MT_MISC16,
+    MT_MEGA,
+    MT_CLIP,
+    MT_MISC17,
+    MT_MISC18,
+    MT_MISC19,
+    MT_MISC20,
+    MT_MISC21,
+    MT_MISC22,
+    MT_MISC23,
+    MT_MISC24,
+    MT_MISC25,
+    MT_CHAINGUN,
+    MT_MISC26,
+    MT_MISC27,
+    MT_MISC28,
+    MT_SHOTGUN,
+    MT_SUPERSHOTGUN,
+    MT_MISC29,
+    MT_MISC30,
+    MT_MISC31,
+    MT_MISC32,
+    MT_MISC33,
+    MT_MISC34,
+    MT_MISC35,
+    MT_MISC36,
+    MT_MISC37,
+    MT_MISC38,
+    MT_MISC39,
+    MT_MISC40,
+    MT_MISC41,
+    MT_MISC42,
+    MT_MISC43,
+    MT_MISC44,
+    MT_MISC45,
+    MT_MISC46,
+    MT_MISC47,
+    MT_MISC48,
+    MT_MISC49,
+    MT_MISC50,
+    MT_MISC51,
+    MT_MISC52,
+    MT_MISC53,
+    MT_MISC54,
+    MT_MISC55,
+    MT_MISC56,
+    MT_MISC57,
+    MT_MISC58,
+    MT_MISC59,
+    MT_MISC60,
+    MT_MISC61,
+    MT_MISC62,
+    MT_MISC63,
+    MT_MISC64,
+    MT_MISC65,
+    MT_MISC66,
+    MT_MISC67,
+    MT_MISC68,
+    MT_MISC69,
+    MT_MISC70,
+    MT_MISC71,
+    MT_MISC72,
+    MT_MISC73,
+    MT_MISC74,
+    MT_MISC75,
+    MT_MISC76,
+    MT_MISC77,
+    MT_MISC78,
+    MT_MISC79,
+    MT_MISC80,
+    MT_MISC81,
+    MT_MISC82,
+    MT_MISC83,
+    MT_MISC84,
+    MT_MISC85,
+    MT_MISC86,
+    NUMMOBJTYPES
+
+}

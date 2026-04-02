@@ -52,9 +52,23 @@ impl Mul for fixed {
 	}
 }
 
+impl Mul<i32> for fixed {
+	type Output = fixed;
+
+	fn mul(self, rhs: i32) -> Self::Output {
+		fixed(self.0 * rhs)
+	}
+}
+
 impl MulAssign for fixed {
 	fn mul_assign(&mut self, rhs: fixed) {
 		self.0 = self.mul(rhs).0
+	}
+}
+
+impl MulAssign<i32> for fixed {
+	fn mul_assign(&mut self, rhs: i32) {
+		self.0 *= rhs
 	}
 }
 

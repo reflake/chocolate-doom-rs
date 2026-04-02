@@ -230,4 +230,3 @@ const char *D_GameModeString(GameMode_t mode)
             return "unknown";
     }
 }
-
