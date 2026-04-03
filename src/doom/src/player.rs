@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use common::{fixed::fixed, tickcmd::TickCmd};
 
 use crate::mobj::Mobj;

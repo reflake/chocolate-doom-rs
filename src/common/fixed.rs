@@ -9,6 +9,7 @@ use std::{i32, ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAss
 // Fixed point, 32bit as 16.16.
 //
 pub const FRACBITS: i32	= 16;
+pub const FRACMASK: i32 = (2 << FRACBITS - 1) - 1;
 pub const FRACUNIT: i32	= 1 << FRACBITS;
 
 #[allow(non_camel_case_types)]
@@ -92,5 +93,36 @@ impl Div for fixed {
 impl DivAssign for fixed {
 	fn div_assign(&mut self, rhs: Self) {
 		self.0 = self.div(rhs).0
+	}
+}
+
+// Conversion between fixed and floating representation
+impl fixed {
+	pub const fn to_double(self) -> f64 {
+		self.0 as f64 / (1u64 << FRACBITS) as f64
+	}
+}
+
+impl From<i32> for fixed {
+	fn from(value: i32) -> Self {
+		fixed(value << FRACBITS)
+	}
+}
+
+impl From<f64> for fixed {
+	fn from(value: f64) -> Self {
+		fixed((value * (FRACMASK + 1) as f64) as i32)
+	}
+}
+
+pub mod debug {
+    use std::fmt::Debug;
+
+    use crate::fixed::fixed;
+
+	impl Debug for fixed {
+		fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+			write!(f, "{}", self.to_double())
+		}
 	}
 }

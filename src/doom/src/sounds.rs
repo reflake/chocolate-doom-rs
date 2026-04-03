@@ -1,5 +1,15 @@
+use crate::mobj::Mobj;
+
 unsafe extern "C" { 
-	pub fn S_StartSound(origin_p: *mut std::ffi::c_void, sfx_id: SfxEnum);
+	pub fn S_StartSound(origin_p: *const Mobj, sfx_id: SfxEnum);
+}
+
+impl Mobj {
+	pub fn emit_sound(&self, sfx_id: SfxEnum) {
+		unsafe {
+			S_StartSound(self, sfx_id);
+		}
+	}
 }
 
 #[allow(nonstandard_style, dead_code)]

@@ -18,6 +18,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
+name = "bool_ext"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "035e76c653904ecd3879de303f91ea9ddb809e52a4fb0e08ed657c3cfa483c05"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -27,6 +33,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "bool_ext",
  "rstest",
 ]
 
@@ -35,6 +42,7 @@ name = "doom-rs"
 version = "0.1.0"
 dependencies = [
  "bitflags",
+ "bool_ext",
  "common",
  "rstest",
 ]

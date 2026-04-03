@@ -1,13 +1,87 @@
-use std::ptr::{null, null_mut};
+use std::ops::{Add, Not};
 
-use common::{fixed::fixed, mode::{GetGameVersion, GameVersion}};
+use bool_ext::BoolExt;
+use common::{fixed::fixed, mode::{GameVersion, game_version}, ptr_as_ref, vector::concrete::{vec2, vec3}};
 
-use crate::{mobj::{Flags, Mobj, MobjType, P_SpawnMobj}, sounds::{S_StartSound, SfxEnum}};
+use crate::{mobj::{Flags, Mobj, MobjType}, sounds::{SfxEnum}};
 
 unsafe extern "C" {
-	pub fn P_TeleportByLineTag(line: *mut std::ffi::c_void) -> *const std::ffi::c_void;
+	pub fn P_TeleportByLineTag(line: *mut std::ffi::c_void) -> *mut Mobj;
 
 	pub fn P_TeleportMove(thing: *mut Mobj, x: fixed, y: fixed) -> bool;
+}
+
+fn teleport_by_line_tag<'a>(line: *mut std::ffi::c_void) -> Option<&'a Mobj> {
+	unsafe {
+		let ptr = P_TeleportByLineTag(line);
+		ptr_as_ref(ptr)
+	}
+}
+
+pub enum TeleportError {
+	CannotTeleportMissile,
+	OtherSide,
+	NoCorrespondingLine,
+	CannotMove,
+}
+
+impl Mobj {
+	pub fn teleport_move(&mut self, pos: vec2) -> bool {
+		unsafe {
+			P_TeleportMove(self, pos.x, pos.y)
+		}
+	}
+
+	pub fn teleport(&mut self, line: *mut std::ffi::c_void, side: i32) -> Result<(), TeleportError> {
+
+		type Error = TeleportError;
+
+		// don't teleport missiles
+		self.flags.contains(Flags::MISSILE).not()
+				  .or_err(Error::CannotTeleportMissile)?;
+
+		// Don't teleport if hit back of line,
+		//  so you can get out of teleporter.
+		(side != 1).or_err(Error::OtherSide)?;
+
+		let dest = teleport_by_line_tag(line).ok_or(Error::NoCorrespondingLine)?;
+
+		let old_pos = self.position;
+
+		self.teleport_move(dest.position.xy())
+			.or_err(Error::CannotMove)?;
+
+		// The first Final Doom executable does not set self->z
+		// when teleporting. This quirk is unique to this
+		// particular version; the later version included in
+		// some versions of the Id Anthology fixed this.
+		if game_version() != GameVersion::exe_final {
+			self.position.z = self.floorz;
+		}
+
+		self.player()
+			.map(|player| player.viewz = self.position.z + player.viewheight);
+
+		// spawn teleport fog at source and destination
+		let fog = Mobj::spawn(old_pos, MobjType::MT_TFOG);
+
+		fog.emit_sound(SfxEnum::sfx_telept);
+
+		let spawn_pos = dest.position.xy().add(dest.forward_xy() * 20).with_z(self.position.z);
+		let fog = Mobj::spawn(spawn_pos, MobjType::MT_TFOG);
+
+		// emit sound, where?
+		fog.emit_sound(SfxEnum::sfx_telept);
+
+		// don't move for a bit
+		self.player()
+			.map(|_| self.reactiontime = 18);
+
+		self.angle = dest.angle;
+		self.momentum = vec3::ZERO;
+
+		Ok(())
+	}
 }
 
 //
@@ -17,72 +91,9 @@ unsafe extern "C" {
 extern "C" fn EV_Teleport(
 	line: *mut std::ffi::c_void, 
 	side: i32, 
-	p_thing: *mut Mobj) -> bool
+	thing: *mut Mobj) -> bool
 {
-	unsafe {
-    	// don't teleport missiles
-		let thing = &mut *p_thing;
+	let thing = unsafe { &mut *thing };
 
-		if thing.flags.contains(Flags::MISSILE) {
-			return false;
-		}
-
-		// Don't teleport if hit back of line,
-		//  so you can get out of teleporter.
-		if side == 1 {
-			return false;
-		}
-
-		let target = P_TeleportByLineTag(line);
-
-		if target.is_null() {
-			return false;
-		}
-
-		let target = target.cast::<Mobj>().as_ref().unwrap();
-
-		let old_pos = (thing.x, thing.y, thing.z);
-
-		if !P_TeleportMove(p_thing, target.x, target.y) {
-			return false;
-		}
-
-		// The first Final Doom executable does not set thing->z
-		// when teleporting. This quirk is unique to this
-		// particular version; the later version included in
-		// some versions of the Id Anthology fixed this.
-		if GetGameVersion() != GameVersion::exe_final {
-			thing.z = thing.floorz;
-		}
-
-		if !thing.player.is_null() {
-			let player = &mut *thing.player;
-
-			player.viewz = thing.z + player.viewheight;
-		}
-
-		// spawn teleport fog at source and destination
-		let fog = P_SpawnMobj(old_pos.0, old_pos.1, old_pos.2, MobjType::MT_TFOG);
-
-		S_StartSound(fog, SfxEnum::sfx_telept);
-
-		let fog = P_SpawnMobj(target.x + target.angle.fine_cosine() * 20, 
-							  target.y + target.angle.fine_sine() * 20,
-							  thing.z, MobjType::MT_TFOG);
-
-		// emit sound, where?
-		S_StartSound(fog, SfxEnum::sfx_telept);
-
-		// don't move for a bit
-		if !thing.player.is_null() {
-		    thing.reactiontime = 18;
-		}
-
-		thing.angle = target.angle;
-		thing.momx = fixed(0);
-		thing.momy = fixed(0);
-		thing.momz = fixed(0);
-
-		return true;
-	}
+	thing.teleport(line, side).is_ok()
 }

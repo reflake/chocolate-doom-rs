@@ -1,5 +1,7 @@
+use std::ops::Not;
+
 use bitflags::bitflags;
-use common::{fixed::fixed, trigonometry::ang};
+use common::{fixed::fixed, ptr_as_ref_mut, trigonometry::ang, vector::concrete::{vec2, vec3}};
 
 use crate::{info::StateEnum, player::Player};
 
@@ -8,7 +10,27 @@ unsafe extern "C" {
 
 	pub fn P_MobjStateEqual( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
 
-	pub fn P_SpawnMobj(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut std::ffi::c_void;
+	pub fn P_SpawnMobj(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut Mobj;
+}
+
+impl Mobj {
+	pub fn spawn<'a>(position: vec3, obj_type: MobjType) -> &'a Mobj {
+		unsafe {
+			let p = position;
+			& *P_SpawnMobj(p.x, p.y, p.z, obj_type)
+		}
+	}
+	
+	pub fn spawn_mut<'a>(position: vec3, obj_type: MobjType) -> &'a mut Mobj {
+		unsafe {
+			let p = position;
+			&mut *P_SpawnMobj(p.x, p.y, p.z, obj_type)
+		}
+	}
+
+	pub fn player<'a>(&mut self) -> Option<&'a mut Player> {
+		ptr_as_ref_mut(self.player)
+	}
 }
 
 #[repr(C)]
@@ -36,9 +58,7 @@ pub struct Mobj
     pub thinker: Thinker,
 
     // Info for drawing: position.
-    pub x: fixed,
-    pub y: fixed,
-    pub z: fixed,
+    pub position: vec3,
 
     // More list: links in sector (if needed)
     pub snext: *mut Mobj,
@@ -67,9 +87,7 @@ pub struct Mobj
 	pub height: fixed,	
 
     // Momentums, used to update position.
-	pub momx: fixed,
-	pub momy: fixed,
-	pub momz: fixed,
+	pub momentum: vec3,
 
     // If == validcount, already checked.
     validcount: i32,
@@ -102,7 +120,7 @@ pub struct Mobj
 
     // Additional info record for player avatars only.
     // Only valid if type == MT_PLAYER
-    pub player: *mut Player,
+    player: *mut Player,
 
     // Player number last looked for.
     lastlook: i32,
@@ -114,6 +132,15 @@ pub struct Mobj
     // Thing being chased/attacked for tracers.
     tracer: *mut Mobj,
     
+}
+
+impl Mobj {
+	pub fn forward_xy(&self) -> vec2 {
+		vec2{ 
+			x: self.angle.fine_cosine(),
+			y: self.angle.fine_sine(),
+		}
+	}
 }
 
 //
