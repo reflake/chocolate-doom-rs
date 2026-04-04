@@ -2401,4 +2401,7 @@ boolean G_CheckDemoStatus (void)
 } 
  
  
- 
+void invoke_acp1(actionf_t func, thinker_t* thinker) {
+    
+	func.acp1 (thinker);
+}

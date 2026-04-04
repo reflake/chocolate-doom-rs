@@ -3,7 +3,7 @@ use std::ops::Not;
 use bitflags::bitflags;
 use common::{fixed::fixed, ptr_as_ref_mut, trigonometry::ang, vector::concrete::{vec2, vec3}};
 
-use crate::{info::StateEnum, player::Player};
+use crate::{info::StateEnum, player::Player, tics::Thinker};
 
 unsafe extern "C" { 
 	pub fn P_SetMobjState( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
@@ -31,14 +31,6 @@ impl Mobj {
 	pub fn player<'a>(&mut self) -> Option<&'a mut Player> {
 		ptr_as_ref_mut(self.player)
 	}
-}
-
-#[repr(C)]
-pub struct Thinker
-{
-    prev: *mut Thinker,
-    next: *mut Thinker,
-    func: *mut std::ffi::c_void,
 }
 
 #[repr(C, packed)]

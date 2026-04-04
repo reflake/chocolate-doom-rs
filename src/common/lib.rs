@@ -26,3 +26,7 @@ pub fn ptr_as_ref<'a, T>(ptr: *const T) -> Option<&'a T>
         }
     }
 }
+
+unsafe extern "C" {
+    pub fn Z_Free(void_ptr: *mut std::ffi::c_void);
+}

@@ -2,6 +2,15 @@ use common::{fixed::fixed, tickcmd::TickCmd};
 
 use crate::mobj::Mobj;
 
+unsafe extern "C" {
+    fn P_PlayerThink(player: *mut Player);
+}
+
+#[repr(C)]
+struct Stub {
+    arr: [u8; 24],
+}
+
 //
 // Extended player object info: player_t
 //
@@ -85,12 +94,22 @@ pub struct Player
 
     // Player skin colorshift,
     //  0-3 for which color to draw player.
-    colormap: i32,
+    colormap: i64,
 
     // Overlay view sprites (gun, etc).
     //pspdef_t[2]
-    psprites: [u8; 48],
+    psprites: [Stub; 2],
 
     // True if secret level has been done.
-    didsecret: bool,
+    didsecret: i32,
+}
+
+impl Player
+{
+    pub unsafe fn think(&mut self)
+    {
+        unsafe {
+            P_PlayerThink(std::mem::transmute(self));
+        }
+    }
 }

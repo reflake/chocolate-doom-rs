@@ -67,9 +67,9 @@
 extern	thinker_t	thinkercap;	
 
 
-void P_InitThinkers (void);
-void P_AddThinker (thinker_t* thinker);
-void P_RemoveThinker (thinker_t* thinker);
+extern void P_InitThinkers (void);
+extern void P_AddThinker (thinker_t* thinker);
+extern void P_RemoveThinker (thinker_t* thinker);
 
 
 //
@@ -78,12 +78,6 @@ void P_RemoveThinker (thinker_t* thinker);
 void P_SetupPsprites (player_t* curplayer);
 void P_MovePsprites (player_t* curplayer);
 void P_DropWeapon (player_t* player);
-
-
-//
-// P_USER
-//
-void	P_PlayerThink (player_t* player);
 
 //
 // P_MOBJ
