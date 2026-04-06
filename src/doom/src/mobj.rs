@@ -1,50 +1,68 @@
-use std::ops::Not;
-
 use bitflags::bitflags;
-use common::{fixed::fixed, ptr_as_ref_mut, trigonometry::ang, vector::concrete::{vec2, vec3}};
+use common::{fixed::fixed, ptr_as_ref_mut, trigonometry::ang, vector::{concrete::{vec2, vec3}, vec}};
 
 use crate::{info::StateEnum, player::Player, tics::Thinker};
 
 unsafe extern "C" { 
 	pub fn P_SetMobjState( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
 
-	pub fn P_MobjStateEqual( mobj: *mut std::ffi::c_void, state: StateEnum ) -> bool;
+	pub fn P_GetMobjState( mobj: *mut std::ffi::c_void ) -> StateEnum;
 
-	pub fn P_SpawnMobj(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut Mobj;
+	pub fn P_SpawnMobj<'a>(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut Mobj<'a>;
+
+	pub static mut onground: bool;
 }
 
-impl Mobj {
-	pub fn spawn<'a>(position: vec3, obj_type: MobjType) -> &'a Mobj {
+#[allow(dead_code)]
+impl <'a>Mobj<'a> {
+	pub fn spawn(position: vec3, obj_type: MobjType) -> &'a Mobj<'a> {
 		unsafe {
 			let p = position;
 			& *P_SpawnMobj(p.x, p.y, p.z, obj_type)
 		}
 	}
 	
-	pub fn spawn_mut<'a>(position: vec3, obj_type: MobjType) -> &'a mut Mobj {
+	pub fn spawn_mut(position: vec3, obj_type: MobjType) -> &'a mut Mobj<'a> {
 		unsafe {
 			let p = position;
 			&mut *P_SpawnMobj(p.x, p.y, p.z, obj_type)
 		}
 	}
 
-	pub fn player<'a>(&mut self) -> Option<&'a mut Player> {
+	pub fn player(&mut self) -> Option<&'a mut Player<'a>> {
 		ptr_as_ref_mut(self.player)
+	}
+
+	// Moves the given origin along a given angle.
+	pub fn thrust(&mut self, angle: ang, mov: fixed) {
+		self.momentum.x += mov * angle.fine_cosine();
+		self.momentum.y += mov * angle.fine_sine();
+	}
+
+	pub fn set_state(&mut self, state: StateEnum) {
+		unsafe {
+			P_SetMobjState(std::mem::transmute(self), state);
+		}
+	}
+
+	pub fn get_state(&self) -> StateEnum {
+		unsafe {
+			P_GetMobjState(std::mem::transmute(self))
+		}
 	}
 }
 
 #[repr(C, packed)]
 pub struct MapThing
 {
-    x: i16,
-    y: i16,
+	position: vec<i16, 2>,
     angle: i16,
     obj_type: i16,
     options: i16,
 }
 
 #[repr(C)]
-pub struct Mobj
+pub struct Mobj<'a>
 {
     // List: thinker links.
     pub thinker: Thinker,
@@ -53,8 +71,8 @@ pub struct Mobj
     pub position: vec3,
 
     // More list: links in sector (if needed)
-    pub snext: *mut Mobj,
-    pub sprev: *mut Mobj,
+    pub snext: &'a mut Mobj<'a>,
+    pub sprev: &'a mut Mobj<'a>,
 
     //More drawing info: to determine current sprite.
     pub angle: ang,	            // orientation
@@ -64,8 +82,8 @@ pub struct Mobj
 
     // Interaction info, by BLOCKMAP.
     // Links in blocks (if needed).
-    pub bnext: *mut Mobj,
-    pub bprev: *mut Mobj,
+    pub bnext: &'a mut Mobj<'a>,
+    pub bprev: &'a mut Mobj<'a>,
     
     //struct subsector_s*	
     pub subsector: *mut std::ffi::c_void,
@@ -82,11 +100,11 @@ pub struct Mobj
 	pub momentum: vec3,
 
     // If == validcount, already checked.
-    validcount: i32,
+    pub validcount: i32,
 
-	obj_type: MobjType,
+	pub obj_type: MobjType,
     //mobjinfo_t*		
-    info: *mut std::ffi::c_void,	// &mobjinfo[mobj->type]
+    pub info: *mut std::ffi::c_void,	// &mobjinfo[mobj->type]
     
     tics: i32,	// state tic counter
     //state_t*		
@@ -95,12 +113,12 @@ pub struct Mobj
     pub health: i32,
 
     // Movement direction, movement generation (zig-zagging).
-    movedir:   i32,	// 0-7
-    movecount: i32,	// when 0, select a new dir
+    pub movedir:   i32,	// 0-7
+    pub movecount: i32,	// when 0, select a new dir
 
     // Thing being chased/attacked (or NULL),
     // also the originator for missiles.	
-    target: *mut Mobj,
+    pub target: *mut Mobj<'a>,
 
     // Reaction time: if non 0, don't attack yet.
     // Used by player to freeze a bit after teleporting.
@@ -108,25 +126,25 @@ pub struct Mobj
 
     // If >0, the target will be chased
     // no matter what (even if shot)
-    threshold: i32,
+    pub threshold: i32,
 
     // Additional info record for player avatars only.
     // Only valid if type == MT_PLAYER
-    player: *mut Player,
+    pub player: &'a mut Player<'a>,
 
     // Player number last looked for.
-    lastlook: i32,
+    pub lastlook: i32,
 
     // For nightmare respawn.
     // mapthing_t
-	spawnpoint: MapThing,
+	pub spawnpoint: MapThing,
 
     // Thing being chased/attacked for tracers.
-    tracer: *mut Mobj,
+    pub tracer: &'a mut Mobj<'a>,
     
 }
 
-impl Mobj {
+impl <'a> Mobj<'a> {
 	pub fn forward_xy(&self) -> vec2 {
 		vec2{ 
 			x: self.angle.fine_cosine(),

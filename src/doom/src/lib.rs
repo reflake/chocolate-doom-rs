@@ -9,3 +9,4 @@ mod stat;
 mod teleport;
 mod tics;
 mod user;
+mod weapons;

@@ -4,7 +4,7 @@ unsafe extern "C" {
 	pub fn S_StartSound(origin_p: *const Mobj, sfx_id: SfxEnum);
 }
 
-impl Mobj {
+impl Mobj<'_> {
 	pub fn emit_sound(&self, sfx_id: SfxEnum) {
 		unsafe {
 			S_StartSound(self, sfx_id);

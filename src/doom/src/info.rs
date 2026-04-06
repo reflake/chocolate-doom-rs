@@ -1,5 +1,6 @@
 #[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum StateEnum
 {
     S_NULL,

@@ -1,12 +1,12 @@
 use common::{Z_Free, fixed::fixed};
 
-use crate::{defs::MAX_PLAYERS, player::{Player}, stat::*};
+use crate::{defs::MAX_PLAYERS, stat::*};
 
 #[repr(C)]
 pub struct Thinker {
     prev: *mut Thinker,
     next: *mut Thinker,
-    func: *mut std::ffi::c_void
+    func: *const std::ffi::c_void
 }
 
 impl Thinker {
@@ -33,6 +33,7 @@ impl<'a> Iterator for ThinkerIter<'a> {
             if self.current.next != &raw mut thinkercap {
                 let next = self.current.next;
                 self.current = &*next;
+				
                 Some(std::mem::transmute(next))
             } else {
                 None
@@ -44,11 +45,14 @@ impl<'a> Iterator for ThinkerIter<'a> {
 unsafe extern "C" {
     pub static mut thinkercap: Thinker;
 
-    fn invoke_acp1(func: *mut std::ffi::c_void, thinker: *mut Thinker);
+    fn invoke_acp1(func: *const std::ffi::c_void, thinker: *mut Thinker);
 
     fn P_UpdateSpecials();
     fn P_RespawnSpecials();
 }
+
+#[allow(dangling_pointers_from_temporaries)]
+pub const REM_FUNC: *const std::ffi::c_void = std::ptr::without_provenance_mut::<std::ffi::c_void>(usize::MAX);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn P_InitThinkers() {
@@ -82,7 +86,7 @@ pub unsafe extern "C" fn P_RemoveThinker(thinker: *mut Thinker)
 {
     // FIXME: NOP.
     unsafe {
-        (*thinker).func = std::mem::transmute(-1isize);
+        (*thinker).func = REM_FUNC;
     }
 }
 
@@ -103,7 +107,7 @@ unsafe fn run_thinkers()
 
         for thinker in thinkercap.iterate()
         {
-            if thinker.func == std::mem::transmute::<isize, *mut std::ffi::c_void>(-1isize)
+            if thinker.func == REM_FUNC
             {
                 thinkers_to_remove.push(thinker);
             }

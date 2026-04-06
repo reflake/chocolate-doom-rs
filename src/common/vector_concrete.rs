@@ -114,7 +114,7 @@ macro_rules! impl_concrete_vec_ops {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct vec2 {
 	pub x: fixed, pub y: fixed

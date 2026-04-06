@@ -6,12 +6,12 @@ use common::{fixed::fixed, mode::{GameVersion, game_version}, ptr_as_ref, vector
 use crate::{mobj::{Flags, Mobj, MobjType}, sounds::{SfxEnum}};
 
 unsafe extern "C" {
-	pub fn P_TeleportByLineTag(line: *mut std::ffi::c_void) -> *mut Mobj;
+	pub fn P_TeleportByLineTag<'a>(line: *mut std::ffi::c_void) -> &'a mut Mobj<'a>;
 
-	pub fn P_TeleportMove(thing: *mut Mobj, x: fixed, y: fixed) -> bool;
+	pub fn P_TeleportMove<'a>(thing: *mut Mobj<'a>, x: fixed, y: fixed) -> bool;
 }
 
-fn teleport_by_line_tag<'a>(line: *mut std::ffi::c_void) -> Option<&'a Mobj> {
+fn teleport_by_line_tag<'a>(line: *mut std::ffi::c_void) -> Option<&'a Mobj<'a>> {
 	unsafe {
 		let ptr = P_TeleportByLineTag(line);
 		ptr_as_ref(ptr)
@@ -25,7 +25,7 @@ pub enum TeleportError {
 	CannotMove,
 }
 
-impl Mobj {
+impl Mobj<'_> {
 	pub fn teleport_move(&mut self, pos: vec2) -> bool {
 		unsafe {
 			P_TeleportMove(self, pos.x, pos.y)
@@ -90,7 +90,7 @@ impl Mobj {
 #[unsafe(no_mangle)]
 extern "C" fn EV_Teleport(
 	line: *mut std::ffi::c_void, 
-	side: i32, 
+	side: i32,
 	thing: *mut Mobj) -> bool
 {
 	let thing = unsafe { &mut *thing };

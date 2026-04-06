@@ -93,7 +93,9 @@ extern int		itemrespawntime[ITEMQUESIZE];
 extern int		iquehead;
 extern int		iquetail;
 
-extern void MovePlayer(mobj_t* player_mobj, fixed_t* move_vel, angle_t* angle, ticcmd_t* cmd, boolean onground);
+extern void MovePlayer(player_t* player, boolean onground);
+
+extern void P_DeathThink(player_t* player);
 
 extern boolean PlayerOnGround(fixed_t player_z, fixed_t floor_z);
 
