@@ -1,13 +1,10 @@
-use crate::mobj::Mobj;
-
-unsafe extern "C" { 
-	pub fn S_StartSound(origin_p: *const Mobj, sfx_id: SfxEnum);
-}
+use crate::{external::INTERFACE, mobj::Mobj};
 
 impl Mobj {
+	#[allow(static_mut_refs)]
 	pub fn emit_sound(&self, sfx_id: SfxEnum) {
 		unsafe {
-			S_StartSound(self, sfx_id);
+			INTERFACE.S_StartSound(self, sfx_id);
 		}
 	}
 }

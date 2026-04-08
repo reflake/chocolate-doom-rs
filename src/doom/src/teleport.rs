@@ -1,20 +1,16 @@
 use std::ops::{Add, Not};
 
 use bool_ext::BoolExt;
-use common::{fixed::fixed, mode::{GameVersion, game_version}, ptr_as_ref, vector::concrete::{vec2, vec3}};
+use common::{mode::{GameVersion}, ptr_as_ref_mut, vector::concrete::{vec2, vec3}};
 
-use crate::{mobj::{Flags, Mobj, MobjType}, sounds::{SfxEnum}};
+use crate::{external::INTERFACE, mobj::{Flags, Mobj, MobjType}, sounds::SfxEnum};
+use crate::stat::gameversion;
 
-unsafe extern "C" {
-	pub fn P_TeleportByLineTag(line: *mut std::ffi::c_void) -> *mut Mobj;
-
-	pub fn P_TeleportMove(thing: *mut Mobj, x: fixed, y: fixed) -> bool;
-}
-
-fn teleport_by_line_tag<'a>(line: *mut std::ffi::c_void) -> Option<&'a Mobj> {
+#[allow(static_mut_refs)]
+fn teleport_by_line_tag<'a>(line: *mut std::ffi::c_void) -> Option<&'static mut Mobj> {
 	unsafe {
-		let ptr = P_TeleportByLineTag(line);
-		ptr_as_ref(ptr)
+		let ptr = INTERFACE.P_TeleportByLineTag(line);
+		ptr_as_ref_mut(ptr)
 	}
 }
 
@@ -26,12 +22,14 @@ pub enum TeleportError {
 }
 
 impl Mobj {
+	#[allow(static_mut_refs)]
 	pub fn teleport_move(&mut self, pos: vec2) -> bool {
 		unsafe {
-			P_TeleportMove(self, pos.x, pos.y)
+			INTERFACE.P_TeleportMove(self, pos.x, pos.y)
 		}
 	}
 
+	#[allow(static_mut_refs)]
 	pub fn teleport(&mut self, line: *mut std::ffi::c_void, side: i32) -> Result<(), TeleportError> {
 
 		type Error = TeleportError;
@@ -55,7 +53,7 @@ impl Mobj {
 		// when teleporting. This quirk is unique to this
 		// particular version; the later version included in
 		// some versions of the Id Anthology fixed this.
-		if game_version() != GameVersion::exe_final {
+		if unsafe { gameversion != GameVersion::exe_final } {
 			self.position.z = self.floorz;
 		}
 
@@ -90,7 +88,7 @@ impl Mobj {
 #[unsafe(no_mangle)]
 extern "C" fn EV_Teleport(
 	line: *mut std::ffi::c_void, 
-	side: i32, 
+	side: i32,
 	thing: *mut Mobj) -> bool
 {
 	let thing = unsafe { &mut *thing };

@@ -21,6 +21,7 @@
 #define __P_MOBJ__
 
 // Basics.
+#include "doomtype.h"
 #include "tables.h"
 #include "m_fixed.h"
 
@@ -36,10 +37,7 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 
-
-
-
-
+extern boolean onground;
 
 //
 // NOTES: mobj_t
@@ -104,6 +102,8 @@
 //
 // Any questions?
 //
+
+extern void P_MovePlayer(void* player);
 
 //
 // Misc. mobj flags

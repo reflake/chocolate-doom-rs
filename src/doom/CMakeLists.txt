@@ -22,6 +22,7 @@ add_library(doom STATIC
             deh_weapon.c
                             d_englsh.h
             		        d_items.h
+            rust_interface.c rust_interface.h
             d_main.c        d_main.h
             d_net.c
                             doomdata.h
@@ -56,8 +57,7 @@ add_library(doom STATIC
             p_sight.c
             p_spec.c        p_spec.h
             p_switch.c
-            p_tick.c        p_tick.h
-            p_user.c
+            		        p_tick.h
             r_bsp.c         r_bsp.h
             r_data.c        r_data.h
                             r_defs.h

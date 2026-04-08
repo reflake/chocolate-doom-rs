@@ -107,7 +107,6 @@ int             gamemap;
 
 int             timelimit;
 
-boolean         paused; 
 boolean         sendpause;             	// send a pause event next tic 
 boolean         sendsave;             	// send a save event next tic 
 boolean         usergame;               // ok to save / end game 
@@ -119,13 +118,9 @@ int             starttime;          	// for comparative timing purposes
 boolean         viewactive; 
  
 int             deathmatch;           	// only if started as net death 
-boolean         netgame;                // only true if packets are broadcast 
-boolean         playeringame[MAXPLAYERS]; 
-player_t        players[MAXPLAYERS]; 
 
 boolean         turbodetected[MAXPLAYERS];
  
-int             consoleplayer;          // player taking events and displaying 
 int             displayplayer;          // view being displayed 
 int             levelstarttic;          // gametic at level start 
 int             totalkills, totalitems, totalsecret;    // for intermission 
@@ -134,7 +129,6 @@ char           *demoname;
 boolean         demorecording; 
 boolean         longtics;               // cph's doom 1.91 longtics hack
 boolean         lowres_turn;            // low resolution turning for longtics
-boolean         demoplayback; 
 boolean		netdemo; 
 byte*		demobuffer;
 byte*		demo_p;

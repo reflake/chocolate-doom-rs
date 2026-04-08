@@ -1,11 +1,3 @@
-unsafe extern "C" {
-	pub fn GetGameVersion() -> GameVersion;
-}
-
-pub fn game_version() -> GameVersion {
-	unsafe { GetGameVersion() }
-}
-
 #[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]

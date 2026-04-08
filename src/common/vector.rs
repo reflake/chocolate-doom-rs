@@ -77,6 +77,25 @@ impl <T, R, const L: usize> Mul<R> for vec<T, L>
 	}
 }
 
+impl <T, R, const L: usize> Div<R> for vec<T, L>
+	where T: Copy + Div<R, Output = T>,
+	      R: Copy
+{
+	type Output = Self;
+
+	fn div(self, rhs: R) -> Self::Output {
+		let mut arr = self.arr;
+
+		for i in 0..L {
+			arr[i] = arr[i] / rhs;
+		}
+
+		Self {
+			arr: arr
+		}
+	}
+}
+
 mod debug {
     use std::fmt::Debug;
 	use super::vec;

@@ -1,13 +1,16 @@
 
 use std::ptr;
 
-use crate::info::StateEnum;
+use crate::{info::StateEnum};
+
+use AmmoType::*;
+use StateEnum::*;
 
 // The defined weapons,
 //  including a marker indicating
 //  user has not changed weapon.
+#[repr(C)]
 #[allow(nonstandard_style, dead_code)]
-#[repr(u32)]
 pub enum WeaponType
 {
     wp_fist,
@@ -20,26 +23,13 @@ pub enum WeaponType
     wp_chainsaw,
     wp_supershotgun,
 
-    NUMWEAPONS,
+    NUM_WEAPONS,
     
     // No pending weapon change.
     wp_nochange
-
 }
 
-
-// Ammunition types defined.
-#[allow(nonstandard_style, dead_code)]
-#[repr(u32)]
-pub enum AmmoType
-{
-    am_clip,	// Pistol / chaingun ammo.
-    am_shell,	// Shotgun / double barreled shotgun.
-    am_cell,	// Plasma rifle, BFG.
-    am_misl,	// Missile launcher.
-    NUMAMMO,
-    am_noammo	// Unlimited for chainsaw / fist.	
-}
+pub const NUM_OF_WEAPON_TYPES: usize = WeaponType::NUM_WEAPONS as usize;
 
 // Weapon info: sprite frames, ammunition use.
 #[allow(nonstandard_style)]
@@ -54,9 +44,20 @@ pub struct WeaponInfo
     flashstate: StateEnum,
 }
 
-use AmmoType::*;
-use WeaponType::*;
-use StateEnum::*;
+// Ammunition types defined.
+#[allow(nonstandard_style, dead_code)]
+#[repr(u32)]
+pub enum AmmoType
+{
+    am_clip,	// Pistol / chaingun ammo.
+    am_shell,	// Shotgun / double barreled shotgun.
+    am_cell,	// Plasma rifle, BFG.
+    am_misl,	// Missile launcher.
+    NUM_AMMO,
+    am_noammo	// Unlimited for chainsaw / fist.	
+}
+
+pub const NUM_OF_AMMO_TYPES: usize = AmmoType::NUM_AMMO as usize;
 
 //
 // PSPRITE ACTIONS for waepons.
@@ -70,7 +71,7 @@ use StateEnum::*;
 // atkstate, i.e. attack/fire/hit frame
 // flashstate, muzzle flash
 //
-static WEAPON_INFOS: [WeaponInfo; NUMWEAPONS as usize] = [
+static WEAPON_INFOS: [WeaponInfo; WeaponType::NUM_WEAPONS as usize] = [
     WeaponInfo {
 		// fist
 		ammo: am_noammo,

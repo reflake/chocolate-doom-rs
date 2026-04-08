@@ -114,7 +114,6 @@ static boolean          joypadSave = false; // was the save action initiated by 
 char			saveOldString[SAVESTRINGSIZE];  
 
 boolean			inhelpscreens;
-boolean			menuactive;
 
 #define SKULLXOFF		-32
 #define LINEHEIGHT		16

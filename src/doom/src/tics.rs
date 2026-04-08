@@ -1,18 +1,21 @@
-use common::{Z_Free, fixed::fixed};
+use common::{bool::{FALSE, TRUE}, fixed::fixed};
 
-use crate::{defs::MAX_PLAYERS, player::{Player}, stat::*};
+use crate::{defs::MAX_PLAYERS, external::INTERFACE, stat::*};
+
+#[unsafe(no_mangle)]
+pub static mut thinkercap: Thinker = unsafe { std::mem::zeroed() };
 
 #[repr(C)]
 pub struct Thinker {
     prev: *mut Thinker,
     next: *mut Thinker,
-    func: *mut std::ffi::c_void
+    func: Option<unsafe extern "C" fn(*mut Thinker)>,
 }
 
 impl Thinker {
     fn invoke_acp1(&mut self) {
         unsafe {
-            invoke_acp1(self.func, self);
+            (self.func.unwrap())(&mut *self);
         }
     }
 
@@ -33,6 +36,7 @@ impl<'a> Iterator for ThinkerIter<'a> {
             if self.current.next != &raw mut thinkercap {
                 let next = self.current.next;
                 self.current = &*next;
+				
                 Some(std::mem::transmute(next))
             } else {
                 None
@@ -41,14 +45,8 @@ impl<'a> Iterator for ThinkerIter<'a> {
     }
 }
 
-unsafe extern "C" {
-    pub static mut thinkercap: Thinker;
-
-    fn invoke_acp1(func: *mut std::ffi::c_void, thinker: *mut Thinker);
-
-    fn P_UpdateSpecials();
-    fn P_RespawnSpecials();
-}
+#[allow(dangling_pointers_from_temporaries)]
+pub const REM_FUNC: *const std::ffi::c_void = std::ptr::without_provenance_mut::<std::ffi::c_void>(usize::MAX);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn P_InitThinkers() {
@@ -82,7 +80,7 @@ pub unsafe extern "C" fn P_RemoveThinker(thinker: *mut Thinker)
 {
     // FIXME: NOP.
     unsafe {
-        (*thinker).func = std::mem::transmute(-1isize);
+        (*thinker).func = std::mem::transmute(REM_FUNC);
     }
 }
 
@@ -103,11 +101,11 @@ unsafe fn run_thinkers()
 
         for thinker in thinkercap.iterate()
         {
-            if thinker.func == std::mem::transmute::<isize, *mut std::ffi::c_void>(-1isize)
+            if thinker.func == std::mem::transmute(REM_FUNC)
             {
                 thinkers_to_remove.push(thinker);
             }
-            else if !thinker.func.is_null()
+            else if thinker.func.is_some()
             {
                 thinker.invoke_acp1();
             }
@@ -119,24 +117,25 @@ unsafe fn run_thinkers()
             (*(*thinker).next).prev = (*thinker).prev;
             (*(*thinker).prev).next = (*thinker).next;
 
-            Z_Free(thinker as *mut std::ffi::c_void);
+            INTERFACE.Z_Free(thinker as *mut std::ffi::c_void);
         }
     }
 }
 
+#[allow(static_mut_refs)]
 #[unsafe(no_mangle)]
 pub extern "C" fn P_Ticker()
 {
     unsafe {
         // run the tic
-        if paused {
+        if paused == TRUE {
             return;
         }
             
         // pause if in menu and at least one tic has been run
-        if !netgame
-            && menuactive
-            && !demoplayback
+        if netgame == FALSE
+            && menuactive == TRUE
+            && demoplayback == FALSE
             && players[consoleplayer as usize].viewz != fixed(1)
         {
             return;
@@ -144,14 +143,14 @@ pub extern "C" fn P_Ticker()
         
             
         for i in 0..MAX_PLAYERS {
-            if playeringame[i] != 0 {
+            if playeringame[i] == TRUE {
                 players[i].think();
             }
         }
                 
         run_thinkers ();
-        P_UpdateSpecials ();
-        P_RespawnSpecials ();
+        INTERFACE.P_UpdateSpecials();
+        INTERFACE.P_RespawnSpecials();
 
         // for par times
         leveltime += 1;

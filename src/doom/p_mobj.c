@@ -90,20 +90,16 @@ P_SetMobjState
     return true;
 }
 
-boolean
-P_MobjStateEqual
-( mobj_t*	mobj,
-  statenum_t	state )
+statenum_t
+P_GetMobjState
+( mobj_t*	mobj )
 {
-	state_t*	st;
-
-	if (state == S_NULL)
+	if (mobj->state == S_NULL)
 	{
-	return mobj->state == (state_t *) S_NULL;
+	return S_NULL;
 	}
 
-	st = &states[state];
-	return mobj->state == st;
+	return (statenum_t)((mobj->state - &states[S_NULL]) / sizeof(state_t*));
 }
 
 //
@@ -1133,8 +1129,6 @@ P_SpawnPlayerMissile
 // 16 pixels of bob
 #define MAXBOB	0x100000	
 
-boolean		onground;
-
 //
 // P_CalcHeight
 // Calculate the walking / running height adjustment
@@ -1206,77 +1200,12 @@ void P_CalcHeight (player_t* player)
 }
 
 
-
-//
-// P_MovePlayer
-//
-void P_MovePlayer (player_t* player)
-{
-    // Do not let the player control movement
-    //  if not onground.
-    onground = PlayerOnGround(player->mo->z, player->mo->floorz);
-	
-	MovePlayer(player->mo, &player->mo->momx, &player->mo->angle, &player->cmd, onground);
-}
-
-
-
 //
 // P_DeathThink
 // Fall on your face when dying.
 // Decrease POV height to floor height.
 //
 #define ANG5   	(ANG90/18)
-
-void P_DeathThink (player_t* player)
-{
-    angle_t		angle;
-    angle_t		delta;
-
-    P_MovePsprites (player);
-	
-    // fall to the ground
-    if (player->viewheight > 6*FRACUNIT)
-	player->viewheight -= FRACUNIT;
-
-    if (player->viewheight < 6*FRACUNIT)
-	player->viewheight = 6*FRACUNIT;
-
-    player->deltaviewheight = 0;
-    onground = (player->mo->z <= player->mo->floorz);
-    P_CalcHeight (player);
-	
-    if (player->attacker && player->attacker != player->mo)
-    {
-	angle = R_PointToAngle2 (player->mo->x,
-				 player->mo->y,
-				 player->attacker->x,
-				 player->attacker->y);
-	
-	delta = angle - player->mo->angle;
-	
-	if (delta < ANG5 || delta > (unsigned)-ANG5)
-	{
-	    // Looking at killer,
-	    //  so fade damage flash down.
-	    player->mo->angle = angle;
-
-	    if (player->damagecount)
-		player->damagecount--;
-	}
-	else if (delta < ANG180)
-	    player->mo->angle += ANG5;
-	else
-	    player->mo->angle -= ANG5;
-    }
-    else if (player->damagecount)
-	player->damagecount--;
-	
-
-    if (player->cmd.buttons & BT_USE)
-	player->playerstate = PST_REBORN;
-}
-
 
 
 //

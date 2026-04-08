@@ -72,6 +72,7 @@
 #include "p_setup.h"
 #include "r_local.h"
 #include "statdump.h"
+#include "rust_interface.h"
 
 #include "d_main.h"
 
@@ -1292,6 +1293,12 @@ void D_DoomMain (void)
     int p;
     char file[256];
     char demolumpname[9];
+
+    D_InitRustInterface();
+
+	rust_interface_t inter = INTERFACE;
+	
+	printf("%p", inter.P_UpdateSpecials);
 
     I_AtExit(D_Endoom, false);
 

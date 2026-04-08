@@ -1,13 +1,10 @@
-use common::{fixed::fixed, tickcmd::TickCmd};
+use bitflags::bitflags;
+use common::{fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, trigonometry::{R_PointToAngle2, ang}};
 
-use crate::mobj::Mobj;
-
-unsafe extern "C" {
-    fn P_PlayerThink(player: *mut Player);
-}
+use crate::{external::INTERFACE, mobj::{Mobj, onground}, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
 
 #[repr(C)]
-struct Stub {
+pub struct Stub {
     arr: [u8; 24],
 }
 
@@ -18,9 +15,9 @@ struct Stub {
 pub struct Player
 {
     mo: *mut Mobj,
-    //playerstate_t	
-    playerstate: i32,
-    cmd: TickCmd,
+
+    pub state: State,
+    pub cmd: TickCmd,
 
     // Determine POV,
     //  including viewpoint bobbing during movement.
@@ -29,87 +26,209 @@ pub struct Player
     // Base height above floor for viewz.
     pub viewheight: fixed,
     // Bob/squat speed.
-    deltaviewheight: fixed,
+    pub deltaviewheight: fixed,
     // bounded/scaled total momentum.
-    bob: fixed,
+    pub bob: fixed,
 
     // This is only used between levels,
     // mo->health is used during levels.
-    health: i32,
-    armorpoints: i32,
+    pub health: i32,
+    pub armorpoints: i32,
     // Armor type is 0-2.
-    armortype: i32,
+    pub armortype: ArmorType,
 
     // Power ups. invinc and invis are tic counters.
-    powers: [i32; 6],
-    cards: [i32; 6],
-    backpack: bool,
+    pub powers: [i32; 6],
+    pub cards: [i32; 6],
+    pub backpack: std::ffi::c_int,
     
     // Frags, kills of other players.
-    frags: [i32; 4],
+    pub frags: [i32; 4],
 
-    //weapontype_t	
-    readyweapon: i32,
+    pub ready_weapon: WeaponType,
     
     // Is wp_nochange if not changing.
-    //weapontype_t	
-    pendingweapon: i32,
+    pub pending_weapon: WeaponType,
 
-    weaponowned: [i32; 9],
-    ammo: [i32; 4],
-    maxammo: [i32; 4],
+    pub weapon_owned: [i32; NUM_OF_WEAPON_TYPES],
+    pub ammo:   	 [i32; NUM_OF_AMMO_TYPES],
+    pub max_ammo:	 [i32; NUM_OF_AMMO_TYPES],
 
     // True if button down last tic.
-    attackdown: i32,
-    usedown: i32,
+    pub attackdown: i32,
+    pub usedown:    i32,
 
     // Bit flags, for cheats and debug.
     // See cheat_t, above.
-    cheats: i32,
+    pub cheats: CheatFlags,
 
     // Refired shots are less accurate.
-    refire: i32,
+    pub refire: i32,
 
      // For intermission stats.
-    killcount: i32,
-    itemcount: i32,
-    secretcount: i32,
+    pub killcount:   i32,
+    pub itemcount:   i32,
+    pub secretcount: i32,
 
     // Hint messages.
-    message: *const std::ffi::c_char,
+    pub message: *const std::ffi::c_char,
     
     // For screen flashing (red or bright).
-    damagecount: i32,
-    bonuscount: i32,
+    pub damagecount: i32,
+    pub bonuscount:  i32,
 
     // Who did damage (NULL for floors/ceilings).
     attacker: *mut Mobj,
     
     // So gun flashes light up areas.
-    extralight: i32,
+    pub extralight: i32,
 
     // Current PLAYPAL, ???
     //  can be set to REDCOLORMAP for pain, etc.
-    fixedcolormap: i32,
+    pub fixedcolormap: i32,
 
     // Player skin colorshift,
     //  0-3 for which color to draw player.
-    colormap: i64,
+    pub colormap: i64,
 
     // Overlay view sprites (gun, etc).
     //pspdef_t[2]
-    psprites: [Stub; 2],
+    pub psprites: [Stub; 2],
 
     // True if secret level has been done.
-    didsecret: i32,
+    pub didsecret: i32,
+}
+
+//
+// Player states.
+//
+#[repr(C)]
+#[allow(non_camel_case_types, dead_code)]
+pub enum State
+{
+    // Playing or camping.
+    PST_LIVE,
+    // Dead on the ground, view follows killer.
+    PST_DEAD,
+    // Ready to restart/respawn???
+    PST_REBORN
+}
+
+#[repr(C)]
+#[allow(non_camel_case_types, dead_code)]
+pub enum ArmorType
+{
+	None,
+	Medium,
+	Heavy
+}
+
+// Player internal flags, for cheats and debug.
+//
+bitflags! {
+	#[repr(C)]
+	#[allow(nonstandard_style, dead_code)]
+	pub struct CheatFlags : u32
+	{
+		// No clipping, walk through barriers.
+		const CF_NOCLIP		= 1;
+		// No damage, no health loss.
+		const CF_GODMODE	= 2;
+		// Not really a cheat, just a debug aid.
+		const CF_NOMOMENTUM	= 4;
+	}
 }
 
 impl Player
 {
-    pub unsafe fn think(&mut self)
+    pub const fn attacker(&self) -> Option<&mut Mobj> {
+        ptr_as_ref_mut(self.attacker)
+    }
+
+    pub const fn mobj<'a>(&self) -> Option<&'a mut Mobj> {
+        ptr_as_ref_mut(self.mo)
+    }
+
+	#[allow(static_mut_refs)]
+    pub fn think(&mut self)
     {
         unsafe {
-            P_PlayerThink(std::mem::transmute(self));
+            INTERFACE.P_PlayerThink(std::mem::transmute(self));
         }
     }
+
+	#[allow(static_mut_refs)]
+	pub fn death_think(&mut self)
+	{
+		unsafe { INTERFACE.P_MovePsprites(&mut *self); }
+		
+		// fall to the ground
+		if self.viewheight > fixed::from(6) {
+			self.viewheight -= fixed::from(1);
+		}
+
+		if self.viewheight < fixed::from(6) {
+			self.viewheight = fixed::from(6);
+		}
+
+		self.deltaviewheight = fixed::from(0);
+		
+        let self_mobj = self.mobj().unwrap();
+
+		unsafe { 
+			// TODO: remove this static variable in the future
+			onground = self_mobj.position.z <= self_mobj.floorz;
+			INTERFACE.P_CalcHeight(&mut *self); 
+		}
+
+		if let Some(attacker) = self.attacker() 
+            && std::ptr::eq(self.attacker, self_mobj)
+		{
+			let angle = R_PointToAngle2(self_mobj.position.xy(), attacker.position.xy());
+			let delta = angle - self_mobj.angle;
+			
+			if delta < ang::degree(5.0) || delta > ang::degree(-5.0)
+			{
+				// Looking at killer,
+				//  so fade damage flash down.
+				self_mobj.angle = angle;
+
+				if self.damagecount != 0 {
+					self.damagecount -= 1;
+				}
+			}
+			else if delta < ang::degree(180.0) {
+				self_mobj.angle += ang::degree(5.0);
+			}
+			else 
+			{
+				self_mobj.angle -= ang::degree(5.0);
+			}
+		}
+		else if self.damagecount != 0 {
+			self.damagecount -= 1;
+		}
+		
+		if self.cmd.buttons.contains(ButtonCode::BT_USE) {
+			self.state = State::PST_REBORN;
+		}
+	}
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn P_DeathThink(player: &mut Player)
+{
+	player.death_think();
+}
+
+
+#[cfg(test)]
+mod test {
+	use super::*;
+	use rstest::rstest;
+ 
+	#[rstest]
+	fn player_size_equals_328() {
+		assert_eq!(std::mem::size_of::<Player>(), 328);
+	}
 }

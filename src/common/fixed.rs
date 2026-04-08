@@ -3,7 +3,7 @@
 // DESCRIPTION:
 //	Fixed point arithemtics, implementation.
 //
-use std::{i32, ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign}};
+use std::{i32, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}};
 
 //
 // Fixed point, 32bit as 16.16.
@@ -93,6 +93,14 @@ impl Div for fixed {
 impl DivAssign for fixed {
 	fn div_assign(&mut self, rhs: Self) {
 		self.0 = self.div(rhs).0
+	}
+}
+
+impl Neg for fixed {
+	type Output = fixed;
+
+	fn neg(self) -> fixed {
+		fixed(-self.0)
 	}
 }
 
