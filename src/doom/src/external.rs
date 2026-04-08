@@ -1,7 +1,7 @@
 // Doom External hehe
 
 use common::fixed::fixed;
-use std::ffi::c_void;
+use std::ffi::{CStr, CString, c_void};
 
 use crate::{info::StateEnum, mobj::{Mobj, MobjType}, player::Player, sounds::SfxEnum};
 
@@ -24,6 +24,7 @@ pub struct Interface {
 
 	// This should lie in the common library, but it's easier to put it here for now.
 	Z_Free: Option<unsafe extern "C" fn(void_ptr: *mut c_void)>,
+	I_Error: Option<unsafe extern "C" fn(str: *const std::ffi::c_char)>,
 }
 
 #[allow(nonstandard_style)]
@@ -97,6 +98,12 @@ impl Interface {
 	pub fn Z_Free(&self, void_ptr: *mut c_void) {
 		unsafe {
 			(self.Z_Free.as_ref().unwrap())(void_ptr)
+		}
+	}
+
+	pub fn I_Error(&self, str: &CString) {
+		unsafe {
+			(self.I_Error.as_ref().unwrap())(str.as_ptr())
 		}
 	}
 }

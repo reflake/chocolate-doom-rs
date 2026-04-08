@@ -62,154 +62,22 @@ int	clipammo[NUMAMMO] = {10, 4, 20, 1};
 // Returns false if the ammo can't be picked up at all
 //
 
-boolean
+extern boolean
 P_GiveAmmo
 ( player_t*	player,
   ammotype_t	ammo,
-  int		num )
-{
-    int		oldammo;
-	
-    if (ammo == am_noammo)
-	return false;
-		
-    if (ammo >= NUMAMMO)
-	I_Error ("P_GiveAmmo: bad type %i", ammo);
-		
-    if ( player->ammo[ammo] == player->maxammo[ammo]  )
-	return false;
-		
-    if (num)
-	num *= clipammo[ammo];
-    else
-	num = clipammo[ammo]/2;
-    
-    if (gameskill == sk_baby
-	|| gameskill == sk_nightmare)
-    {
-	// give double ammo in trainer mode,
-	// you'll need in nightmare
-	num <<= 1;
-    }
-    
-		
-    oldammo = player->ammo[ammo];
-    player->ammo[ammo] += num;
-
-    if (player->ammo[ammo] > player->maxammo[ammo])
-	player->ammo[ammo] = player->maxammo[ammo];
-
-    // If non zero ammo, 
-    // don't change up weapons,
-    // player was lower on purpose.
-    if (oldammo)
-	return true;	
-
-    // We were down to zero,
-    // so select a new weapon.
-    // Preferences are not user selectable.
-    switch (ammo)
-    {
-      case am_clip:
-	if (player->readyweapon == wp_fist)
-	{
-	    if (player->weaponowned[wp_chaingun])
-		player->pendingweapon = wp_chaingun;
-	    else
-		player->pendingweapon = wp_pistol;
-	}
-	break;
-	
-      case am_shell:
-	if (player->readyweapon == wp_fist
-	    || player->readyweapon == wp_pistol)
-	{
-	    if (player->weaponowned[wp_shotgun])
-		player->pendingweapon = wp_shotgun;
-	}
-	break;
-	
-      case am_cell:
-	if (player->readyweapon == wp_fist
-	    || player->readyweapon == wp_pistol)
-	{
-	    if (player->weaponowned[wp_plasma])
-		player->pendingweapon = wp_plasma;
-	}
-	break;
-	
-      case am_misl:
-	if (player->readyweapon == wp_fist)
-	{
-	    if (player->weaponowned[wp_missile])
-		player->pendingweapon = wp_missile;
-	}
-      default:
-	break;
-    }
-	
-    return true;
-}
+  int		num );
 
 
 //
 // P_GiveWeapon
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-boolean
+extern boolean
 P_GiveWeapon
 ( player_t*	player,
   weapontype_t	weapon,
-  boolean	dropped )
-{
-    boolean	gaveammo;
-    boolean	gaveweapon;
-	
-    if (netgame
-	&& (deathmatch!=2)
-	 && !dropped )
-    {
-	// leave placed weapons forever on net games
-	if (player->weaponowned[weapon])
-	    return false;
-
-	player->bonuscount += BONUSADD;
-	player->weaponowned[weapon] = true;
-
-	if (deathmatch)
-	    P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 5);
-	else
-	    P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 2);
-	player->pendingweapon = weapon;
-
-	if (player == &players[consoleplayer])
-	    S_StartSound (NULL, sfx_wpnup);
-	return false;
-    }
-	
-    if (GetWeaponInfo(weapon)->ammo != am_noammo)
-    {
-	// give one clip with a dropped weapon,
-	// two clips with a found weapon
-	if (dropped)
-	    gaveammo = P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 1);
-	else
-	    gaveammo = P_GiveAmmo (player, GetWeaponInfo(weapon)->ammo, 2);
-    }
-    else
-	gaveammo = false;
-	
-    if (player->weaponowned[weapon])
-	gaveweapon = false;
-    else
-    {
-	gaveweapon = true;
-	player->weaponowned[weapon] = true;
-	player->pendingweapon = weapon;
-    }
-	
-    return (gaveweapon || gaveammo);
-}
+  boolean	dropped );
 
  
 
@@ -217,21 +85,10 @@ P_GiveWeapon
 // P_GiveBody
 // Returns false if the body isn't needed at all
 //
-boolean
+extern boolean
 P_GiveBody
 ( player_t*	player,
-  int		num )
-{
-    if (player->health >= MAXHEALTH)
-	return false;
-		
-    player->health += num;
-    if (player->health > MAXHEALTH)
-	player->health = MAXHEALTH;
-    player->mo->health = player->health;
-	
-    return true;
-}
+  int		num );
 
 
 
@@ -240,87 +97,29 @@ P_GiveBody
 // Returns false if the armor is worse
 // than the current armor.
 //
-boolean
+extern boolean
 P_GiveArmor
 ( player_t*	player,
-  int		armortype )
-{
-    int		hits;
-	
-    hits = armortype*100;
-    if (player->armorpoints >= hits)
-	return false;	// don't pick up
-		
-    player->armortype = armortype;
-    player->armorpoints = hits;
-	
-    return true;
-}
+  int		armortype );
 
 
 
 //
 // P_GiveCard
 //
-void
+extern void
 P_GiveCard
 ( player_t*	player,
-  card_t	card )
-{
-    if (player->cards[card])
-	return;
-    
-    player->bonuscount = BONUSADD;
-    player->cards[card] = 1;
-}
+  card_t	card );
 
 
 //
 // P_GivePower
 //
-boolean
+extern boolean
 P_GivePower
 ( player_t*	player,
-  int /*powertype_t*/	power )
-{
-    if (power == pw_invulnerability)
-    {
-	player->powers[power] = INVULNTICS;
-	return true;
-    }
-    
-    if (power == pw_invisibility)
-    {
-	player->powers[power] = INVISTICS;
-	player->mo->flags |= MF_SHADOW;
-	return true;
-    }
-    
-    if (power == pw_infrared)
-    {
-	player->powers[power] = INFRATICS;
-	return true;
-    }
-    
-    if (power == pw_ironfeet)
-    {
-	player->powers[power] = IRONTICS;
-	return true;
-    }
-    
-    if (power == pw_strength)
-    {
-	P_GiveBody (player, 100);
-	player->powers[power] = 1;
-	return true;
-    }
-	
-    if (player->powers[power])
-	return false;	// already got it
-		
-    player->powers[power] = 1;
-    return true;
-}
+  int /*powertype_t*/	power );
 
 
 

@@ -22,3 +22,18 @@ pub enum GameVersion
     exe_strife_1_2,  // Strife v1.2
     exe_strife_1_31  // Strife v1.31
 }
+
+// Skill level.
+
+#[allow(nonstandard_style, dead_code)]
+#[repr(i32)]
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum SkillLevel
+{
+    sk_noitems = -1,        // the "-skill 0" hack
+    sk_baby = 0,
+    sk_easy,
+    sk_medium,
+    sk_hard,
+    sk_nightmare
+}

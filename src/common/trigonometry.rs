@@ -98,11 +98,13 @@ impl Neg for ang {
 	}
 }
 
+#[allow(nonstandard_style)]
 pub fn R_PointToAngle2(p1: vec2, p2: vec2)-> ang
 {	
     return R_PointToAngle(p1 - p2);
 }
 
+#[allow(nonstandard_style)]
 pub fn R_PointToAngle(point: vec2) -> ang
 {
     if point == vec2::ZERO {

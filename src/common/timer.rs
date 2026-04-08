@@ -1,0 +1,1 @@
+pub const TICKRATE: u32 = 35;

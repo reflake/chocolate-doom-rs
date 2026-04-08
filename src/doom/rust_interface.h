@@ -15,6 +15,7 @@
 void *P_TeleportByLineTag(line_t *line);
 void P_PlayerThink(player_t *player);
 void P_CalcHeight(player_t *player);
+void I_ExError(const char *error);
 statenum_t P_GetMobjState(mobj_t *mobj);
 
 typedef struct
@@ -31,6 +32,7 @@ typedef struct
     statenum_t (*P_GetMobjState)(mobj_t *mobj);
     mobj_t *(*P_SpawnMobj)(fixed_t x, fixed_t y, fixed_t z, mobjtype_t obj_type);
     void (*Z_Free)(void *void_ptr);
+	void (*I_Error)(const char *error);
 } rust_interface_t;
 
 extern rust_interface_t INTERFACE;

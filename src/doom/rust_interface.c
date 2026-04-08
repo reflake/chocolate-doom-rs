@@ -4,10 +4,15 @@
 
 #include "rust_interface.h"
 
+#include "i_system.h"
 #include "p_local.h"
 #include "p_spec.h"
 #include "s_sound.h"
 #include "z_zone.h"
+
+void I_ExError(const char *error) {
+	I_Error("%s", error);
+}
 
 void D_InitRustInterface(void)
 {
@@ -23,4 +28,5 @@ void D_InitRustInterface(void)
     INTERFACE.P_GetMobjState = P_GetMobjState;
     INTERFACE.P_SpawnMobj = P_SpawnMobj;
     INTERFACE.Z_Free = Z_Free;
+	INTERFACE.I_Error = I_ExError;
 }

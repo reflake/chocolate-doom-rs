@@ -1,7 +1,7 @@
 use bitflags::bitflags;
-use common::{fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, trigonometry::{R_PointToAngle2, ang}};
+use common::{bool::{TRUE, bool32}, fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, trigonometry::{R_PointToAngle2, ang}};
 
-use crate::{external::INTERFACE, mobj::{Mobj, onground}, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
+use crate::{defs::{NUM_OF_CARD_TYPES, NUM_OF_POWER_TYPES}, external::INTERFACE, mobj::{Mobj, onground}, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
 
 #[repr(C)]
 pub struct Stub {
@@ -33,13 +33,13 @@ pub struct Player
     // This is only used between levels,
     // mo->health is used during levels.
     pub health: i32,
-    pub armorpoints: i32,
+    pub armor_points: i32,
     // Armor type is 0-2.
-    pub armortype: ArmorType,
+    pub armor_type: ArmorType,
 
     // Power ups. invinc and invis are tic counters.
-    pub powers: [i32; 6],
-    pub cards: [i32; 6],
+    pub powers: [u32; NUM_OF_POWER_TYPES],
+    pub cards: [bool32; NUM_OF_CARD_TYPES],
     pub backpack: std::ffi::c_int,
     
     // Frags, kills of other players.
@@ -50,7 +50,7 @@ pub struct Player
     // Is wp_nochange if not changing.
     pub pending_weapon: WeaponType,
 
-    pub weapon_owned: [i32; NUM_OF_WEAPON_TYPES],
+    pub weapon_owned: [bool32; NUM_OF_WEAPON_TYPES],
     pub ammo:   	 [i32; NUM_OF_AMMO_TYPES],
     pub max_ammo:	 [i32; NUM_OF_AMMO_TYPES],
 
@@ -75,7 +75,7 @@ pub struct Player
     
     // For screen flashing (red or bright).
     pub damagecount: i32,
-    pub bonuscount:  i32,
+    pub bonus_count:  i32,
 
     // Who did damage (NULL for floors/ceilings).
     attacker: *mut Mobj,
@@ -212,6 +212,10 @@ impl Player
 		if self.cmd.buttons.contains(ButtonCode::BT_USE) {
 			self.state = State::PST_REBORN;
 		}
+	}
+
+	pub fn owns_weapon(&self, weapon: WeaponType) -> bool {
+		self.weapon_owned[weapon as usize] == TRUE
 	}
 }
 

@@ -1,6 +1,7 @@
 mod defs;
 mod external;
 mod info;
+mod interaction;
 mod mobj;
 mod player;
 mod random;

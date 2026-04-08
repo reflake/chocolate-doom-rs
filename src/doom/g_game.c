@@ -98,7 +98,6 @@ gamestate_t     oldgamestate;
  
 gameaction_t    gameaction; 
 gamestate_t     gamestate; 
-skill_t         gameskill; 
 boolean		respawnmonsters;
 int             gameepisode; 
 int             gamemap; 
@@ -117,8 +116,6 @@ int             starttime;          	// for comparative timing purposes
  
 boolean         viewactive; 
  
-int             deathmatch;           	// only if started as net death 
-
 boolean         turbodetected[MAXPLAYERS];
  
 int             displayplayer;          // view being displayed 

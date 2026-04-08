@@ -1,4 +1,4 @@
-use std::ops::Not;
+use std::ops::{BitOr, Not};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
@@ -17,6 +17,16 @@ impl From<bool32> for bool {
 	}
 }
 
+impl From<bool> for bool32 {
+	fn from(b: bool) -> bool32 {
+		if b {
+			bool32::True
+		} else {
+			bool32::False
+		}
+	}
+}
+
 impl Not for bool32 {
 	type Output = Self;
 
@@ -25,5 +35,11 @@ impl Not for bool32 {
 			bool32::False => bool32::True,
 			bool32::True => bool32::False,
 		}
+	}
+}
+
+impl bool32 {
+	pub fn b(self) -> bool {
+		self.into()
 	}
 }

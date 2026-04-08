@@ -11,6 +11,7 @@ use StateEnum::*;
 //  user has not changed weapon.
 #[repr(C)]
 #[allow(nonstandard_style, dead_code)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum WeaponType
 {
     wp_fist,
@@ -36,17 +37,18 @@ pub const NUM_OF_WEAPON_TYPES: usize = WeaponType::NUM_WEAPONS as usize;
 #[repr(C)]
 pub struct WeaponInfo
 {
-    ammo: AmmoType,
-    upstate: StateEnum,
-    downstate: StateEnum,
-    readystate: StateEnum,
-    atkstate: StateEnum,
-    flashstate: StateEnum,
+    pub ammo: AmmoType,
+    pub upstate: StateEnum,
+    pub downstate: StateEnum,
+    pub readystate: StateEnum,
+    pub atkstate: StateEnum,
+    pub flashstate: StateEnum,
 }
 
 // Ammunition types defined.
 #[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AmmoType
 {
     am_clip,	// Pistol / chaingun ammo.
@@ -156,7 +158,7 @@ static WEAPON_INFOS: [WeaponInfo; WeaponType::NUM_WEAPONS as usize] = [
 ];
 
 #[unsafe(no_mangle)]
-pub extern "C" fn GetWeaponInfo(weapon: WeaponType) -> *mut WeaponInfo
+pub extern "C" fn GetWeaponInfo(weapon: WeaponType) -> Option<&'static WeaponInfo>
 {
-	ptr::addr_of!(WEAPON_INFOS[weapon as usize]) as *mut WeaponInfo
+	Some(&WEAPON_INFOS[weapon as usize])
 }

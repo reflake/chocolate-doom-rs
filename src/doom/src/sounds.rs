@@ -9,6 +9,13 @@ impl Mobj {
 	}
 }
 
+#[allow(static_mut_refs)]
+pub fn st_emit_sound(sfx_id: SfxEnum) {
+	unsafe {
+		INTERFACE.S_StartSound(std::ptr::null(), sfx_id);
+	}
+}
+
 #[allow(nonstandard_style, dead_code)]
 #[repr(u32)]
 pub enum SfxEnum

@@ -1,9 +1,11 @@
 pub mod bool;
 pub mod fixed;
 pub mod trigonometry;
+pub mod limits;
 pub mod mode;
 pub mod tri_tables;
 pub mod tickcmd;
+pub mod timer;
 pub mod vector;
 
 pub const fn ptr_as_ref_mut<'a, T>(ptr: *mut T) -> Option<&'a mut T>
