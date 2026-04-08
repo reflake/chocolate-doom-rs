@@ -1,7 +1,7 @@
 // Doom External hehe
 
 use common::fixed::fixed;
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{CString, c_void};
 
 use crate::{info::StateEnum, mobj::{Mobj, MobjType}, player::Player, sounds::SfxEnum};
 
@@ -15,7 +15,6 @@ pub struct Interface {
 	S_StartSound: 		 Option<unsafe extern "C" fn(origin_p: *const Mobj, sfx_id: SfxEnum)>,
     P_PlayerThink: 		 Option<unsafe extern "C" fn(player: *mut Player)>,
 	P_MovePsprites:      Option<unsafe extern "C" fn(player: *mut Player)>,
-	P_CalcHeight:        Option<unsafe extern "C" fn(player: *mut Player)>,
     P_UpdateSpecials:    Option<unsafe extern "C" fn()>,
     P_RespawnSpecials:   Option<unsafe extern "C" fn()>,
 	P_SetMobjState:      Option<unsafe extern "C" fn(mobj: *mut c_void, state: StateEnum) -> bool>,
@@ -56,12 +55,6 @@ impl Interface {
 	pub fn P_MovePsprites(&self, player: *mut Player) {
 		unsafe {
 			(self.P_MovePsprites.as_ref().unwrap())(player)
-		}
-	}
-
-	pub fn P_CalcHeight(&self, player: *mut Player) {
-		unsafe {
-			(self.P_CalcHeight.as_ref().unwrap())(player)
 		}
 	}
 

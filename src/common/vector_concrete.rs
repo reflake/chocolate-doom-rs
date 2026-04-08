@@ -143,6 +143,10 @@ impl vec2 {
 	pub fn with_z(self, z: impl Into<fixed>) -> vec3 {
 		vec3::from_xyz(self.x, self.y, z)
 	}
+
+	pub fn square_magnitude(self) -> fixed {
+		self.x * self.x + self.y * self.y
+	}
 }
 
 impl_concrete_vec_ops!(vec2, fixed, 2);
@@ -183,6 +187,10 @@ impl vec3 {
 
 	pub fn with_z(self, z: impl Into<fixed>) -> vec3 {
 		vec3::from_xyz(self.x, self.y, z)
+	}
+
+	pub fn square_magnitude(self) -> fixed {
+		self.x * self.x + self.y * self.y + self.z * self.z
 	}
 }
 

@@ -14,7 +14,6 @@
 // Declared in p_mobj.c but not exposed by public headers.
 void *P_TeleportByLineTag(line_t *line);
 void P_PlayerThink(player_t *player);
-void P_CalcHeight(player_t *player);
 void I_ExError(const char *error);
 statenum_t P_GetMobjState(mobj_t *mobj);
 
@@ -25,7 +24,6 @@ typedef struct
     void (*S_StartSound)(void *origin_p, int sfx_id);
     void (*P_PlayerThink)(player_t *player);
     void (*P_MovePsprites)(player_t *player);
-    void (*P_CalcHeight)(player_t *player);
     void (*P_UpdateSpecials)(void);
     void (*P_RespawnSpecials)(void);
     boolean (*P_SetMobjState)(mobj_t *mobj, statenum_t state);

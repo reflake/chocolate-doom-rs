@@ -1,7 +1,7 @@
 use bitflags::bitflags;
-use common::{bool::{TRUE, bool32}, fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, trigonometry::{R_PointToAngle2, ang}};
+use common::{bool::{TRUE, bool32}, fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, tri_tables::{FINE_SINE, FINE_ANGLES, FINE_MASK}, trigonometry::{R_PointToAngle2, ang}};
 
-use crate::{defs::{NUM_OF_CARD_TYPES, NUM_OF_POWER_TYPES}, external::INTERFACE, mobj::{Mobj, onground}, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
+use crate::{defs::{NUM_OF_CARD_TYPES, NUM_OF_POWER_TYPES}, external::INTERFACE, mobj::{Mobj, onground}, stat::leveltime, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
 
 #[repr(C)]
 pub struct Stub {
@@ -104,6 +104,7 @@ pub struct Player
 //
 #[repr(C)]
 #[allow(non_camel_case_types, dead_code)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State
 {
     // Playing or camping.
@@ -157,6 +158,75 @@ impl Player
         }
     }
 
+    pub fn calculate_height(&mut self)
+    {
+        const MAX_BOB: fixed = fixed(0x100000);
+        const VIEW_HEIGHT: fixed = fixed::from_int(41);
+
+        // Regular movement bobbing
+        // (needs to be calculated for gun swing
+        // even if not on ground)
+        // OPTIMIZE: tablify angle
+        // Note: a LUT allows for effects
+        //  like a ramp with low health.
+        let mobj = self.mobj().unwrap();
+        self.bob = mobj.momentum.square_magnitude() / 4;
+
+        if self.bob > MAX_BOB {
+            self.bob = MAX_BOB;
+        }
+
+        if (self.cheats.contains(CheatFlags::CF_NOMOMENTUM)) || !self.on_ground()
+        {
+            self.viewz = mobj.position.z + VIEW_HEIGHT;
+
+            if self.viewz > mobj.ceilingz - fixed::from_int(4)
+            {
+                self.viewz = mobj.ceilingz - fixed::from_int(4);
+            }
+
+            self.viewz = mobj.position.z + self.viewheight;
+            return;
+        }
+
+        let angle = unsafe { FINE_ANGLES / 20 * leveltime as usize } & FINE_MASK;
+        let bob = self.bob / 2 * FINE_SINE[angle];
+
+        // move viewheight
+        if self.state == State::PST_LIVE
+        {
+            self.viewheight += self.deltaviewheight;
+
+            if self.viewheight > VIEW_HEIGHT
+            {
+                self.viewheight = VIEW_HEIGHT;
+                self.deltaviewheight = fixed(0);
+            }
+
+            if self.viewheight < VIEW_HEIGHT / 2
+            {
+                self.viewheight = VIEW_HEIGHT / 2;
+                if self.deltaviewheight <= fixed(0) {
+                    self.deltaviewheight = fixed(1);
+                }
+            }
+            
+            if self.deltaviewheight != fixed(0)	
+            {
+                //                   maybe replace with fixed::from_double(0.25)?
+                self.deltaviewheight += fixed::from_int(1) / 4;
+                if self.deltaviewheight == fixed(0) {
+                    self.deltaviewheight = fixed(1);
+                }
+            }
+        }
+        self.viewz = mobj.position.z + self.viewheight + bob;
+
+        if self.viewz > mobj.ceilingz - fixed::from_int(4) {
+            self.viewz = mobj.ceilingz - fixed::from_int(4);
+        }
+    }
+
 	#[allow(static_mut_refs)]
 	pub fn death_think(&mut self)
 	{
@@ -178,11 +248,11 @@ impl Player
 		unsafe { 
 			// TODO: remove this static variable in the future
 			onground = self_mobj.position.z <= self_mobj.floorz;
-			INTERFACE.P_CalcHeight(&mut *self); 
+			self.calculate_height(); 
 		}
 
 		if let Some(attacker) = self.attacker() 
-            && std::ptr::eq(self.attacker, self_mobj)
+            && !std::ptr::addr_eq(self.attacker, self_mobj)
 		{
 			let angle = R_PointToAngle2(self_mobj.position.xy(), attacker.position.xy());
 			let delta = angle - self_mobj.angle;
@@ -217,6 +287,16 @@ impl Player
 	pub fn owns_weapon(&self, weapon: WeaponType) -> bool {
 		self.weapon_owned[weapon as usize] == TRUE
 	}
+}
+
+//
+// P_CalcHeight
+// Calculate the walking / running height adjustment
+//
+#[unsafe(no_mangle)]
+unsafe extern "C" fn P_CalcHeight (player: &mut Player) 
+{
+    player.calculate_height();
 }
 
 #[unsafe(no_mangle)]

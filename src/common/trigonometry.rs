@@ -25,10 +25,10 @@ impl ang {
 		ang((hi_angle as u32) << FRACBITS)
 	}
 	pub const fn fine_cosine(self) -> fixed {
-		fixed(FINE_SINE[self.to_fine_shift() + 0x800])
+		FINE_SINE[self.to_fine_shift() + 0x800]
 	}
 	pub const fn fine_sine(self) -> fixed {
-		fixed(FINE_SINE[self.to_fine_shift()])
+		FINE_SINE[self.to_fine_shift()]
 	}
 
 	// to get a global angle from cartesian coordinates, the coordinates are
@@ -101,7 +101,7 @@ impl Neg for ang {
 #[allow(nonstandard_style)]
 pub fn R_PointToAngle2(p1: vec2, p2: vec2)-> ang
 {	
-    return R_PointToAngle(p1 - p2);
+    return R_PointToAngle(p2 - p1);
 }
 
 #[allow(nonstandard_style)]

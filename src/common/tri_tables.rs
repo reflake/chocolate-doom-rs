@@ -1,6 +1,21 @@
-use crate::trigonometry::ang;
+use crate::{fixed::fixed, trigonometry::ang};
 
-pub const FINE_SINE: [i32; 10240] =
+pub const FINE_ANGLES: usize = 0x2000;
+pub const FINE_MASK: usize = FINE_ANGLES - 1;
+
+const fn raw_to_fixed<const L: usize>(raw: [i32; L]) -> [fixed; L]
+{
+    let mut fixeds = [fixed(0); L];
+    let mut i = 0;
+    while i < L {
+        fixeds[i] = fixed(raw[i] as i32);
+        i += 1;
+    }
+    
+    fixeds
+}
+
+pub const FINE_SINE: [fixed; 10240] = raw_to_fixed(
 [
     25,75,125,175,226,276,326,376,
     427,477,527,578,628,678,728,779,
@@ -1282,9 +1297,9 @@ pub const FINE_SINE: [i32; 10240] =
     65525,65526,65527,65527,65528,65529,65530,65530,
     65531,65531,65532,65532,65533,65533,65534,65534,
     65534,65535,65535,65535,65535,65535,65535,65535
-];
+]);
 
-pub const fn raw_to_angle<const L: usize>(raw: [u32; L]) -> [ang; L]
+const fn raw_to_angle<const L: usize>(raw: [u32; L]) -> [ang; L]
 {
     let mut angles = [ang(0); L];
     let mut i = 0;

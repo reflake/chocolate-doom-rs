@@ -1133,71 +1133,7 @@ P_SpawnPlayerMissile
 // P_CalcHeight
 // Calculate the walking / running height adjustment
 //
-void P_CalcHeight (player_t* player) 
-{
-    int		angle;
-    fixed_t	bob;
-    
-    // Regular movement bobbing
-    // (needs to be calculated for gun swing
-    // even if not on ground)
-    // OPTIMIZE: tablify angle
-    // Note: a LUT allows for effects
-    //  like a ramp with low health.
-    player->bob =
-	FixedMul (player->mo->momx, player->mo->momx)
-	+ FixedMul (player->mo->momy,player->mo->momy);
-    
-    player->bob >>= 2;
-
-    if (player->bob>MAXBOB)
-	player->bob = MAXBOB;
-
-    if ((player->cheats & CF_NOMOMENTUM) || !onground)
-    {
-	player->viewz = player->mo->z + VIEWHEIGHT;
-
-	if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
-	    player->viewz = player->mo->ceilingz-4*FRACUNIT;
-
-	player->viewz = player->mo->z + player->viewheight;
-	return;
-    }
-		
-    angle = (FINEANGLES/20*leveltime)&FINEMASK;
-    bob = FixedMul ( player->bob/2, finesine[angle]);
-
-    
-    // move viewheight
-    if (player->playerstate == PST_LIVE)
-    {
-	player->viewheight += player->deltaviewheight;
-
-	if (player->viewheight > VIEWHEIGHT)
-	{
-	    player->viewheight = VIEWHEIGHT;
-	    player->deltaviewheight = 0;
-	}
-
-	if (player->viewheight < VIEWHEIGHT/2)
-	{
-	    player->viewheight = VIEWHEIGHT/2;
-	    if (player->deltaviewheight <= 0)
-		player->deltaviewheight = 1;
-	}
-	
-	if (player->deltaviewheight)	
-	{
-	    player->deltaviewheight += FRACUNIT/4;
-	    if (!player->deltaviewheight)
-		player->deltaviewheight = 1;
-	}
-    }
-    player->viewz = player->mo->z + player->viewheight + bob;
-
-    if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
-	player->viewz = player->mo->ceilingz-4*FRACUNIT;
-}
+extern void P_CalcHeight (player_t* player);
 
 
 //

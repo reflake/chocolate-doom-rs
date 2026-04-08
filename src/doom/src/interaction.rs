@@ -1,4 +1,4 @@
-use std::{ffi::{CStr, CString}, ops::Not, ops::BitOr};
+use std::{ffi::CString, ops::Not};
 
 use common::{bool::{FALSE, TRUE, bool32}, limits, mode::SkillLevel};
 

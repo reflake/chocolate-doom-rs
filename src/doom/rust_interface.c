@@ -17,11 +17,10 @@ void I_ExError(const char *error) {
 void D_InitRustInterface(void)
 {
     INTERFACE.P_TeleportByLineTag = P_TeleportByLineTag;
-    INTERFACE.P_TeleportMove = &P_TeleportMove;
+    INTERFACE.P_TeleportMove = P_TeleportMove;
     INTERFACE.S_StartSound = S_StartSound;
     INTERFACE.P_PlayerThink = P_PlayerThink;
     INTERFACE.P_MovePsprites = P_MovePsprites;
-    INTERFACE.P_CalcHeight = P_CalcHeight;
     INTERFACE.P_UpdateSpecials = P_UpdateSpecials;
     INTERFACE.P_RespawnSpecials = P_RespawnSpecials;
     INTERFACE.P_SetMobjState = P_SetMobjState;

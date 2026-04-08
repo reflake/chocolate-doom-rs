@@ -17,6 +17,12 @@ pub const FRACUNIT: i32	= 1 << FRACBITS;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub struct fixed(pub i32);
 
+impl fixed {
+	pub const fn from_int(value: i32) -> Self {
+		fixed(value << FRACBITS)
+	}
+}
+
 impl Add for fixed {
 	type Output = fixed;
 
@@ -90,9 +96,23 @@ impl Div for fixed {
 	}
 }
 
+impl Div<i32> for fixed {
+	type Output = fixed;
+
+	fn div(self, rhs: i32) -> Self::Output {
+		fixed(self.0 / rhs)
+	}
+}
+
 impl DivAssign for fixed {
 	fn div_assign(&mut self, rhs: Self) {
 		self.0 = self.div(rhs).0
+	}
+}
+
+impl DivAssign<i32> for fixed {
+	fn div_assign(&mut self, rhs: i32) {
+		self.0 /= rhs;
 	}
 }
 
