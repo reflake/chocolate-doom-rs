@@ -21,6 +21,27 @@ impl fixed {
 	pub const fn from_int(value: i32) -> Self {
 		fixed(value << FRACBITS)
 	}
+
+	pub const fn abs(self) -> Self {
+		fixed(self.0.abs())
+	}
+
+	// Conversion between fixed and floating representation
+	pub const fn to_double(self) -> f64 {
+		self.0 as f64 / (1u64 << FRACBITS) as f64
+	}
+
+	pub const fn to_int(self) -> i32 {
+		self.0 >> FRACBITS
+	}
+}
+
+pub fn min(a: fixed, b: fixed) -> fixed {
+	if a < b { a } else { b }
+}
+
+pub fn max(a: fixed, b: fixed) -> fixed {
+	if a > b { a } else { b }
 }
 
 impl Add for fixed {
@@ -124,13 +145,6 @@ impl Neg for fixed {
 	}
 }
 
-// Conversion between fixed and floating representation
-impl fixed {
-	pub const fn to_double(self) -> f64 {
-		self.0 as f64 / (1u64 << FRACBITS) as f64
-	}
-}
-
 impl From<i32> for fixed {
 	fn from(value: i32) -> Self {
 		fixed(value << FRACBITS)
@@ -140,6 +154,12 @@ impl From<i32> for fixed {
 impl From<f64> for fixed {
 	fn from(value: f64) -> Self {
 		fixed((value * (FRACMASK + 1) as f64) as i32)
+	}
+}
+
+impl From<fixed> for i32 {
+	fn from(value: fixed) -> Self {
+		value.0 >> FRACBITS
 	}
 }
 

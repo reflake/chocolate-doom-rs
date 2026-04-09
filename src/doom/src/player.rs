@@ -1,7 +1,7 @@
 use bitflags::bitflags;
-use common::{bool::{TRUE, bool32}, fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, tri_tables::{FINE_SINE, FINE_ANGLES, FINE_MASK}, trigonometry::{R_PointToAngle2, ang}};
+use common::{bool::{TRUE, bool32}, fixed::fixed, ptr_as_ref_mut, tickcmd::{ButtonCode, TickCmd}, tri_tables::{*}, trigonometry::{R_PointToAngle2, ang}};
 
-use crate::{defs::{NUM_OF_CARD_TYPES, NUM_OF_POWER_TYPES}, external::INTERFACE, mobj::{Mobj, onground}, stat::leveltime, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
+use crate::{defs::{NUM_OF_CARD_TYPES, NUM_OF_POWER_TYPES}, external::INTERFACE, mobj::{*}, stat::{*}, weapons::{NUM_OF_AMMO_TYPES, NUM_OF_WEAPON_TYPES, WeaponType}};
 
 #[repr(C)]
 pub struct Stub {
@@ -170,7 +170,7 @@ impl Player
         // Note: a LUT allows for effects
         //  like a ramp with low health.
         let mobj = self.mobj().unwrap();
-        self.bob = mobj.momentum.square_magnitude() / 4;
+        self.bob = mobj.momentum.xy().square_magnitude() / 4;
 
         if self.bob > MAX_BOB {
             self.bob = MAX_BOB;
@@ -286,6 +286,10 @@ impl Player
 
 	pub fn owns_weapon(&self, weapon: WeaponType) -> bool {
 		self.weapon_owned[weapon as usize] == TRUE
+	}
+
+	pub fn local_player() -> &'static mut Player {
+		unsafe { &mut players[consoleplayer as usize] }
 	}
 }
 

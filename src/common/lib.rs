@@ -3,9 +3,10 @@ pub mod fixed;
 pub mod trigonometry;
 pub mod limits;
 pub mod mode;
-pub mod tri_tables;
+pub mod sounds;
 pub mod tickcmd;
 pub mod timer;
+pub mod tri_tables;
 pub mod vector;
 
 pub const fn ptr_as_ref_mut<'a, T>(ptr: *mut T) -> Option<&'a mut T>

@@ -1,11 +1,9 @@
 #include "m_random.h"
 
-random_t random, pred_random;
+extern random_t pred_random;
 
 void InitRandom(void)
 {
-	random = CreateRandom();
-	pred_random = CreateRandom();
 }
 
 int M_Random(void)

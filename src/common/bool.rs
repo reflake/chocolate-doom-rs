@@ -1,4 +1,4 @@
-use std::ops::{BitOr, Not};
+use std::ops::{Not};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]

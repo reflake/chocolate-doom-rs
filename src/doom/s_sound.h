@@ -51,10 +51,10 @@ void S_Start(void);
 //  using <sound_id> from sounds.h
 //
 
-void S_StartSound(void *origin, int sound_id);
+extern void S_StartSound(void *origin, int sound_id);
 
 // Stop sound for thing at <origin>
-void S_StopSound(mobj_t *origin);
+extern void S_StopSound(mobj_t *origin);
 
 
 // Start music using <music_id> from sounds.h
@@ -78,7 +78,7 @@ void S_ResumeSound(void);
 //
 // Updates music & sounds
 //
-void S_UpdateSounds(mobj_t *listener);
+extern void S_UpdateSounds(mobj_t *listener);
 
 void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);

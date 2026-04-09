@@ -1,7 +1,7 @@
 #[path = "vector_concrete.rs"]
 pub mod concrete;
 
-use std::{iter::Sum, ops::{Add, AddAssign, Div, Mul, Sub, SubAssign}};
+use std::{ops::{Add, AddAssign, Div, Mul, Sub, SubAssign}};
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]

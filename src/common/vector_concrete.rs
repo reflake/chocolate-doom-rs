@@ -152,7 +152,7 @@ impl vec2 {
 impl_concrete_vec_ops!(vec2, fixed, 2);
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct vec3 {
 	pub x: fixed, pub y: fixed, pub z: fixed,
@@ -173,7 +173,7 @@ impl vec3 {
 		Self { x: x.into(), y: y.into(), z: z.into() }
 	}
 
-	pub fn xy(self) -> vec2 {
+	pub const fn xy(self) -> vec2 {
 		vec2::new(self.x, self.y)
 	}
 

@@ -100,7 +100,7 @@ gameaction_t    gameaction;
 gamestate_t     gamestate; 
 boolean		respawnmonsters;
 int             gameepisode; 
-int             gamemap; 
+extern int          gamemap; 
 
 // If non-zero, exit the level after this number of minutes.
 

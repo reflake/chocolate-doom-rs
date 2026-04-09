@@ -12,6 +12,12 @@ use std::borrow::Borrow;
 
 type RndTable = [u8; 256];
 
+#[unsafe(no_mangle)]
+pub static mut random: Random<&'static RndTable> = Random::new(&RND_TABLE);
+
+#[unsafe(no_mangle)]
+pub static mut pred_random: Random<&'static RndTable> = Random::new(&RND_TABLE);
+
 const RND_TABLE: RndTable = [
     0,   8, 109, 220, 222, 241, 149, 107,  75, 248, 254, 140,  16,  66,
     74,  21, 211,  47,  80, 242, 154,  27, 205, 128, 161,  89,  77,  36,
@@ -41,7 +47,7 @@ pub struct Random<Table> {
 }
 
 impl <T> Random<T> {
-	pub fn new(table: T) -> Self {
+	pub const fn new(table: T) -> Self {
 		Self {
 			index: 0,
 			table: table
@@ -71,18 +77,18 @@ pub extern "C" fn CreateRandom() -> Random<&'static RndTable> {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn NextRandom(random: &mut Random<&'static RndTable>) -> i32 {
-	random.next()
+pub extern "C" fn NextRandom(rng: &mut Random<&'static RndTable>) -> i32 {
+	rng.next()
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn NextSubRandom(random: &mut Random<&'static RndTable>) -> i32 {
-	random.next_sub()
+pub extern "C" fn NextSubRandom(rng: &mut Random<&'static RndTable>) -> i32 {
+	rng.next_sub()
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ClearRandom(random: &mut Random<&'static RndTable>) {
-	random.clear_random()
+pub extern "C" fn ClearRandom(rng: &mut Random<&'static RndTable>) {
+	rng.clear_random()
 }
 
 #[cfg(test)]
@@ -100,9 +106,9 @@ mod test {
 
 		random_table[1] = 42;
 
-		let mut random = Random::new(random_table);
+		let mut rng = Random::new(random_table);
 
-		assert_eq!(random.next(), 42);
+		assert_eq!(rng.next(), 42);
 	}
 
 	#[rstest]
@@ -111,9 +117,9 @@ mod test {
 		random_table[1] = 42;
 		random_table[2] = 10;
 
-		let mut random = Random::new(random_table);
+		let mut rng = Random::new(random_table);
 
-		assert_eq!(random.next_sub(), 42 - 10);
+		assert_eq!(rng.next_sub(), 42 - 10);
 	}
 
 	#[rstest]
@@ -121,15 +127,15 @@ mod test {
 
 		random_table[1] = 11;
 
-		let mut random = Random::new(random_table);
+		let mut rng = Random::new(random_table);
 
 		for _ in 0..10 {
-			random.next();
+			rng.next();
 		}
 
-		random.clear_random();
+		rng.clear_random();
 
-		assert_eq!(random.next(), 11);
+		assert_eq!(rng.next(), 11);
 	}
 
 	#[rstest]
@@ -138,12 +144,12 @@ mod test {
 		random_table[0] = 1;
 		random_table[1] = 2;
 
-		let mut random = Random::new(random_table);
+		let mut rng = Random::new(random_table);
 
 		for _ in 0..255 {
-			random.next();
+			rng.next();
 		}
 
-		assert_eq!(random.next(), 1);
+		assert_eq!(rng.next(), 1);
 	}
 }

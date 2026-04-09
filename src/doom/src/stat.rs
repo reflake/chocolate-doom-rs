@@ -33,3 +33,6 @@ pub static mut gameskill: SkillLevel = SkillLevel::sk_baby;
 
 #[unsafe(no_mangle)]
 pub static mut deathmatch: i32 = 0; // only if started as net death 
+
+#[unsafe(no_mangle)]
+pub static mut gamemap: i32 = 0;

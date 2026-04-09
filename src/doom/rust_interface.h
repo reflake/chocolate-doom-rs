@@ -10,6 +10,7 @@
 #include "m_fixed.h"
 #include "p_mobj.h"
 #include "r_defs.h"
+#include "i_sound.h"
 
 // Declared in p_mobj.c but not exposed by public headers.
 void *P_TeleportByLineTag(line_t *line);
@@ -21,7 +22,6 @@ typedef struct
 {
     void *(*P_TeleportByLineTag)(line_t *line);
     boolean (*P_TeleportMove)(mobj_t *thing, fixed_t x, fixed_t y);
-    void (*S_StartSound)(void *origin_p, int sfx_id);
     void (*P_PlayerThink)(player_t *player);
     void (*P_MovePsprites)(player_t *player);
     void (*P_UpdateSpecials)(void);
@@ -29,8 +29,14 @@ typedef struct
     boolean (*P_SetMobjState)(mobj_t *mobj, statenum_t state);
     statenum_t (*P_GetMobjState)(mobj_t *mobj);
     mobj_t *(*P_SpawnMobj)(fixed_t x, fixed_t y, fixed_t z, mobjtype_t obj_type);
-    void (*Z_Free)(void *void_ptr);
-	void (*I_Error)(const char *error);
+    void    (*Z_Free)(void *void_ptr);
+	void    (*I_Error)(const char *error);
+	int     (*I_StartSound)(sfxinfo_t *sfx, int channel, int volume, int sep, int pitch);
+	int     (*I_GetSfxLumpNum)(sfxinfo_t *sfxinfo);
+	void    (*I_StopSound)(int handle);
+	boolean (*I_SoundIsPlaying)(int handle);
+	void    (*I_UpdateSounds)(void);
+	void    (*I_UpdateSoundParams)(int handle, int vol, int sep);
 } rust_interface_t;
 
 extern rust_interface_t INTERFACE;

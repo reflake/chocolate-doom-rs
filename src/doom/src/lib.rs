@@ -5,6 +5,7 @@ mod interaction;
 mod mobj;
 mod player;
 mod random;
+mod sound_tables;
 mod sounds;
 mod stat;
 mod teleport;

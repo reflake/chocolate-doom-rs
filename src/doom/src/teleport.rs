@@ -25,7 +25,7 @@ impl Mobj {
 	#[allow(static_mut_refs)]
 	pub fn teleport_move(&mut self, pos: vec2) -> bool {
 		unsafe {
-			INTERFACE.P_TeleportMove(self, pos.x, pos.y)
+			INTERFACE.P_TeleportMove(self, pos.x, pos.y).b()
 		}
 	}
 
