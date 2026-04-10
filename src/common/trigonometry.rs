@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 use crate::{fixed::{FRACBITS, fixed}, tri_tables::{FINE_SINE, TAN_TO_ANGLE}, vector::concrete::vec2};
 
@@ -11,6 +11,9 @@ const DEG_360: i64 = 0x1_0000_0000;
 pub struct ang(pub u32);
 
 impl ang {
+
+	pub const ZERO: ang = ang(0);
+
 	pub const fn degree(deg: f64) -> ang {
 
 		let c = (deg / 360.0).fract() * DEG_360 as f64;
@@ -45,7 +48,7 @@ impl ang {
 		}
 		else
 		{
-			let ans: usize = ((num.0 << 3) as isize / (den.0 >> 8) as isize).cast_unsigned();
+			let ans: usize = (((num.0 << 3) as isize).wrapping_div((den.0 >> 8) as isize)).cast_unsigned();
 
 			if ans <= SLOPE_RANGE
 			{
@@ -59,6 +62,18 @@ impl ang {
 	}
 	const fn to_fine_shift(self) -> usize {
 		(self.0 >> 19) as usize
+	}
+
+	pub const fn to_degree(self) -> f64 {
+		if self.is_neg() {
+			(self.0 as f64 / DEG_360 as f64) * 360.0 - 360.0
+		} else {
+			(self.0 as f64 / DEG_360 as f64) * 360.0
+		}
+	}
+
+	pub const fn is_neg(self) -> bool {
+		self.0 > 0x8000_0000
 	}
 }
 
@@ -87,6 +102,26 @@ impl Sub for ang {
 impl SubAssign for ang {
 	fn sub_assign(&mut self, rhs: ang) {
 		self.0 = self.0.wrapping_sub(rhs.0)
+	}
+}
+
+impl Mul<i32> for ang {
+	type Output = Self;
+
+	fn mul(self, rhs: i32) -> Self::Output {
+		ang(self.0.wrapping_mul(rhs as u32))
+	}
+}
+
+impl Div<i32> for ang {
+	type Output = Self;
+
+	fn div(self, rhs: i32) -> Self::Output {
+		if self.is_neg() {
+			ang(self.neg().0.wrapping_div(rhs as u32).wrapping_neg())
+		} else {
+			ang(self.0.wrapping_div(rhs as u32))
+		}
 	}
 }
 
@@ -120,7 +155,7 @@ pub fn R_PointToAngle(point: vec2) -> ang
                 return ang::slope_div(point.y, point.x);      // octant 0
 			}
             else {
-                return ang(ang::degree(90.0).0 - 1) - ang::slope_div(point.x, point.y);  // octant 1
+                return ang(ang::degree(90.0).0.wrapping_sub(1)) - ang::slope_div(point.x, point.y);  // octant 1
 			}
         }
         else
@@ -141,7 +176,7 @@ pub fn R_PointToAngle(point: vec2) -> ang
         {                       // y>= 0
             if -point.x > point.y
 			{
-                return ang(ang::degree(180.0).0 - 1) - ang::slope_div(point.y, -point.x); // octant 3
+                return ang(ang::degree(180.0).0.wrapping_sub(1)) - ang::slope_div(point.y, -point.x); // octant 3
 			}
             else 
 			{
@@ -156,7 +191,7 @@ pub fn R_PointToAngle(point: vec2) -> ang
 			}
             else 
 			{
-                return ang(ang::degree(270.0).0 - 1) - ang::slope_div(-point.x, -point.y); // octant 5
+                return ang(ang::degree(270.0).0.wrapping_sub(1)) - ang::slope_div(-point.x, -point.y); // octant 5
 			}
         }
     }
@@ -172,7 +207,7 @@ mod angle_tests {
 
 	impl Debug for ang {
 		fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-			write!(f, "ang({:#X})", self.0)
+			write!(f, "({}°: {:#X})", self.to_degree(), self.0)
 		}
 	}
 
@@ -204,5 +239,30 @@ mod angle_tests {
 	#[case(0xC000u16, 270.0)]
 	fn from_hi_angle(#[case] hi_angle: u16, #[case] expected: f64) {
 		assert_eq!(ang::from_hi(hi_angle as i16).0, ang::degree(expected).0);
+	}
+
+	#[rstest]
+	#[case(5.0)]
+	fn negation_of_angle(#[case] deg: f64) {
+		let a = ang::degree(deg);
+		assert_eq!(-a, ang::degree(-deg));
+	}
+
+	#[rstest]
+	#[case(10.0, 2, 20.0)]
+	#[case(5.0, 2, 9.999999906867743)]
+	#[case(-20.0, 3, -60.0)]
+	fn multiplication_of_angle(#[case] deg: f64, #[case] multiplier: i32, #[case] expected: f64) {
+		let a = ang::degree(deg);
+		assert_eq!(a * multiplier, ang::degree(expected));
+	}
+
+	#[rstest]
+	#[case(30.0, 4, 7.5)]
+	#[case(-90.0, 2, -45.0)]
+	#[case(360.0, 8, 0.0)]
+	fn division_of_angle(#[case] deg: f64, #[case] divisor: i32, #[case] expected: f64) {
+		let a = ang::degree(deg);
+		assert_eq!(a / divisor, ang::degree(expected));
 	}
 }

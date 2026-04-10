@@ -771,21 +771,7 @@ void A_Chase (mobj_t*	actor)
 //
 // A_FaceTarget
 //
-void A_FaceTarget (mobj_t* actor)
-{	
-    if (!actor->target)
-	return;
-    
-    actor->flags &= ~MF_AMBUSH;
-	
-    actor->angle = R_PointToAngle2 (actor->x,
-				    actor->y,
-				    actor->target->x,
-				    actor->target->y);
-    
-    if (actor->target->flags & MF_SHADOW)
-	actor->angle += P_SubRandom() << 21;
-}
+extern void A_FaceTarget (mobj_t* actor);
 
 
 //
@@ -1343,82 +1329,10 @@ void A_VileAttack (mobj_t* actor)
 
 
 
-//
-// Mancubus attack,
-// firing three missiles (bruisers)
-// in three different directions?
-// Doesn't look like it. 
-//
-#define	FATSPREAD	(ANG90/8)
-
-void A_FatRaise (mobj_t *actor)
-{
-    A_FaceTarget (actor);
-    S_StartSound (actor, sfx_manatk);
-}
-
-
-void A_FatAttack1 (mobj_t* actor)
-{
-    mobj_t*	mo;
-    mobj_t*     target;
-    int		an;
-
-    A_FaceTarget (actor);
-
-    // Change direction  to ...
-    actor->angle += FATSPREAD;
-    target = P_SubstNullMobj(actor->target);
-    P_SpawnMissile (actor, target, MT_FATSHOT);
-
-    mo = P_SpawnMissile (actor, target, MT_FATSHOT);
-    mo->angle += FATSPREAD;
-    an = mo->angle >> ANGLETOFINESHIFT;
-    mo->momx = FixedMul (mo->info->speed, finecosine[an]);
-    mo->momy = FixedMul (mo->info->speed, finesine[an]);
-}
-
-void A_FatAttack2 (mobj_t* actor)
-{
-    mobj_t*	mo;
-    mobj_t*     target;
-    int		an;
-
-    A_FaceTarget (actor);
-    // Now here choose opposite deviation.
-    actor->angle -= FATSPREAD;
-    target = P_SubstNullMobj(actor->target);
-    P_SpawnMissile (actor, target, MT_FATSHOT);
-
-    mo = P_SpawnMissile (actor, target, MT_FATSHOT);
-    mo->angle -= FATSPREAD*2;
-    an = mo->angle >> ANGLETOFINESHIFT;
-    mo->momx = FixedMul (mo->info->speed, finecosine[an]);
-    mo->momy = FixedMul (mo->info->speed, finesine[an]);
-}
-
-void A_FatAttack3 (mobj_t*	actor)
-{
-    mobj_t*	mo;
-    mobj_t*     target;
-    int		an;
-
-    A_FaceTarget (actor);
-
-    target = P_SubstNullMobj(actor->target);
-    
-    mo = P_SpawnMissile (actor, target, MT_FATSHOT);
-    mo->angle -= FATSPREAD/2;
-    an = mo->angle >> ANGLETOFINESHIFT;
-    mo->momx = FixedMul (mo->info->speed, finecosine[an]);
-    mo->momy = FixedMul (mo->info->speed, finesine[an]);
-
-    mo = P_SpawnMissile (actor, target, MT_FATSHOT);
-    mo->angle += FATSPREAD/2;
-    an = mo->angle >> ANGLETOFINESHIFT;
-    mo->momx = FixedMul (mo->info->speed, finecosine[an]);
-    mo->momy = FixedMul (mo->info->speed, finesine[an]);
-}
+extern void A_FatRaise (mobj_t *actor);
+extern void A_FatAttack1 (mobj_t* actor);
+extern void A_FatAttack2 (mobj_t* actor);
+extern void A_FatAttack3 (mobj_t*	actor);
 
 
 //
@@ -1427,30 +1341,7 @@ void A_FatAttack3 (mobj_t*	actor)
 //
 #define	SKULLSPEED		(20*FRACUNIT)
 
-void A_SkullAttack (mobj_t* actor)
-{
-    mobj_t*		dest;
-    angle_t		an;
-    int			dist;
-
-    if (!actor->target)
-	return;
-		
-    dest = actor->target;	
-    actor->flags |= MF_SKULLFLY;
-
-    S_StartSound (actor, actor->info->attacksound);
-    A_FaceTarget (actor);
-    an = actor->angle >> ANGLETOFINESHIFT;
-    actor->momx = FixedMul (SKULLSPEED, finecosine[an]);
-    actor->momy = FixedMul (SKULLSPEED, finesine[an]);
-    dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
-    dist = dist / SKULLSPEED;
-    
-    if (dist < 1)
-	dist = 1;
-    actor->momz = (dest->z+(dest->height>>1) - actor->z) / dist;
-}
+extern void A_SkullAttack (mobj_t* actor);
 
 
 //

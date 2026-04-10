@@ -19,6 +19,7 @@ pub struct Interface {
 	P_SetMobjState:      Option<unsafe extern "C" fn(mobj: *mut c_void, state: StateEnum) -> bool32>,
 	P_GetMobjState:      Option<unsafe extern "C" fn(mobj: *mut c_void) -> StateEnum>,
 	P_SpawnMobj:         Option<unsafe extern "C" fn(x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut Mobj>,
+	P_SpawnMissile:      Option<unsafe extern "C" fn(source: *const Mobj, dest: *mut Mobj, obj_type: MobjType) -> *mut Mobj>,
 
 	// This should lie in the common library, but it's easier to put it here for now.
 	Z_Free: Option<unsafe extern "C" fn(void_ptr: *mut c_void)>,
@@ -84,6 +85,12 @@ impl Interface {
 	pub fn P_SpawnMobj(&self, x: fixed, y: fixed, z: fixed, obj_type: MobjType) -> *mut Mobj {
 		unsafe {
 			(self.P_SpawnMobj.as_ref().unwrap())(x, y, z, obj_type)
+		}
+	}
+
+	pub fn P_SpawnMissile(&self, source: *const Mobj, dest: *mut Mobj, obj_type: MobjType) -> *mut Mobj {
+		unsafe {
+			(self.P_SpawnMissile.as_ref().unwrap())(source, dest, obj_type)
 		}
 	}
 

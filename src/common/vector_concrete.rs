@@ -177,6 +177,12 @@ impl vec3 {
 		vec2::new(self.x, self.y)
 	}
 
+	pub const fn xy_mut(&mut self) -> &mut vec2 {
+		unsafe {
+			std::mem::transmute(self)
+		}
+	}
+
 	pub fn with_x(self, x: impl Into<fixed>) -> vec3 {
 		vec3::from_xyz(x, self.y, self.z)
 	}

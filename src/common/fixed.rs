@@ -14,16 +14,19 @@ pub const FRACUNIT: i32	= 1 << FRACBITS;
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct fixed(pub i32);
 
 impl fixed {
+	pub const ZERO: fixed = fixed(0);
+	pub const EPSILON: fixed = fixed(1);
+
 	pub const fn from_int(value: i32) -> Self {
 		fixed(value << FRACBITS)
 	}
 
 	pub const fn abs(self) -> Self {
-		fixed(self.0.abs())
+		fixed(self.0.unsigned_abs() as i32)
 	}
 
 	// Conversion between fixed and floating representation
@@ -141,7 +144,7 @@ impl Neg for fixed {
 	type Output = fixed;
 
 	fn neg(self) -> fixed {
-		fixed(-self.0)
+		fixed(self.0.saturating_neg())
 	}
 }
 
@@ -172,5 +175,16 @@ pub mod debug {
 		fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 			write!(f, "{}", self.to_double())
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn fixed_abs() {
+		let a = fixed(-2147483648);
+		assert_eq!(a.abs(), fixed(-2147483648));
 	}
 }

@@ -29,6 +29,8 @@ typedef struct
     boolean (*P_SetMobjState)(mobj_t *mobj, statenum_t state);
     statenum_t (*P_GetMobjState)(mobj_t *mobj);
     mobj_t *(*P_SpawnMobj)(fixed_t x, fixed_t y, fixed_t z, mobjtype_t obj_type);
+	mobj_t *(*P_SpawnMissile)(mobj_t *source, mobj_t *dest, mobjtype_t obj_type);
+
     void    (*Z_Free)(void *void_ptr);
 	void    (*I_Error)(const char *error);
 	int     (*I_StartSound)(sfxinfo_t *sfx, int channel, int volume, int sep, int pitch);

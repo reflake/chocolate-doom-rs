@@ -25,6 +25,8 @@ void D_InitRustInterface(void)
     INTERFACE.P_SetMobjState = P_SetMobjState;
     INTERFACE.P_GetMobjState = P_GetMobjState;
     INTERFACE.P_SpawnMobj = P_SpawnMobj;
+	INTERFACE.P_SpawnMissile = P_SpawnMissile;
+
     INTERFACE.Z_Free = Z_Free;
 	INTERFACE.I_Error = I_ExError;
 	INTERFACE.I_StartSound = I_StartSound;

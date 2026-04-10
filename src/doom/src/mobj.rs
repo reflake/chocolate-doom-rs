@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use common::{fixed::fixed, ptr_as_ref_mut, trigonometry::ang, vector::{concrete::{vec2, vec3}, vec}};
 
-use crate::{external::INTERFACE, info::StateEnum, player::Player, tics::Thinker};
+use crate::{external::INTERFACE, info::StateEnum, player::Player, sounds::SfxEnum, tics::Thinker};
 
 #[unsafe(no_mangle)]
 pub static mut onground: bool = false;
@@ -43,6 +43,13 @@ impl Mobj {
 			INTERFACE.P_GetMobjState(std::mem::transmute(self))
 		}
 	}
+
+    #[allow(static_mut_refs)]
+    pub fn spawn_missile(&self, target: &mut Mobj, missile_type: MobjType) -> Option<&'static mut Mobj> {
+        unsafe {
+			INTERFACE.P_SpawnMissile (self, target, missile_type).as_mut()
+        }
+    }
 }
 
 #[repr(C, packed)]
@@ -52,6 +59,34 @@ pub struct MapThing
     angle: i16,
     obj_type: i16,
     options: i16,
+}
+
+#[repr(C)]
+pub struct Info
+{
+	pub doomednum: i32,
+	pub spawnstate: i32,
+	pub spawnhealth: i32,
+	pub seestate: i32,
+	pub seesound: i32,
+	pub reactiontime: i32,
+	pub attacksound: SfxEnum,
+	pub painstate: i32,
+	pub painchance: i32,
+	pub painsound: i32,
+	pub meleestate: i32,
+	pub missilestate: i32,
+	pub deathstate: i32,
+	pub xdeathstate: i32,
+	pub deathsound: i32,
+	pub speed: fixed,
+	pub radius: i32,
+	pub height: i32,
+	pub mass: i32,
+	pub damage: i32,
+	pub activesound: i32,
+	pub flags: i32,
+	pub raisestate: i32,
 }
 
 #[repr(C)]
@@ -96,8 +131,7 @@ pub struct Mobj
     pub validcount: i32,
 
 	pub obj_type: MobjType,
-    //mobjinfo_t*		
-    pub info: *mut std::ffi::c_void,	// &mobjinfo[mobj->type]
+    pub info: *mut Info,	// &mobjinfo[mobj->type]
     
     tics: i32,	// state tic counter
     //state_t*		
@@ -142,6 +176,30 @@ impl Mobj {
 		vec2{ 
 			x: self.angle.fine_cosine(),
 			y: self.angle.fine_sine(),
+		}
+	}
+
+	// Certain functions assume that a mobj_t pointer is non-NULL,
+	// causing a crash in some situations where it is NULL.  Vanilla
+	// Doom did not crash because of the lack of proper memory 
+	// protection. This function substitutes NULL pointers for
+	// pointers to a dummy mobj, to avoid a crash.
+	#[allow(static_mut_refs)]
+	pub fn P_SubstNullMobj<'a>(mobj: *mut Mobj) -> &'a mut Mobj
+	{
+		unsafe {
+			let Some(mobj) = mobj.as_mut()
+			else
+			{
+				static mut DUMMY_MOBJ: Mobj = unsafe { std::mem::zeroed() };
+
+				DUMMY_MOBJ.position = vec3::ZERO;
+				DUMMY_MOBJ.flags = Flags::empty();
+
+				return &mut DUMMY_MOBJ
+			};
+
+			mobj
 		}
 	}
 }
