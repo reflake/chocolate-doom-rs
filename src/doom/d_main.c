@@ -18,7 +18,7 @@
 //	parse command line parameters, configure game parameters (turbo),
 //	and call the startup functions.
 //
-
+#include "dumping.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -427,6 +427,8 @@ void D_RunFrame()
         I_FinishUpdate ();                      // page flip or blit buffer
         return;
     }
+
+	DumpState();
 
     // frame syncronous IO operations
     I_StartFrame ();
@@ -1958,6 +1960,35 @@ void D_DoomMain (void)
         I_AtExit(StatDump, true);
         DEH_printf("External statistics registered.\n");
     }
+
+	p = M_CheckParmWithArgs("-dumpstate", 2);
+	if (p)
+	{
+		const char* name = myargv[p + 1];
+
+		dumpFile = M_fopen(name, "w");
+		if (dumpFile == NULL)
+		{
+			DEH_printf("Failed to open dump file %s for writing.", name);
+		}
+
+		if (strchr( myargv[p + 2], 'c') != NULL ) dumpMode |= DM_Checksum;
+		if (strchr( myargv[p + 2], 'm') != NULL ) dumpMode |= DM_Mobjs;
+
+		I_AtExit(SaveDumped, true);
+
+		printf("printing CRC");
+	}
+
+	p = M_CheckParmWithArgs("-tick", 1);
+	if (p)
+	{
+		int tick = atoi(myargv[p + 1]);
+		if (tick >= 0)
+		{
+			targetTick = tick;
+		}
+	}
 
     //!
     // @arg <x>

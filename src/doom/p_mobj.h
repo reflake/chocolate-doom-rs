@@ -279,6 +279,6 @@ typedef struct mobj_s
     
 } mobj_t;
 
-
+statenum_t P_GetMobjState( mobj_t*	mobj );
 
 #endif

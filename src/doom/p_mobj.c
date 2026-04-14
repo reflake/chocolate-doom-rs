@@ -99,7 +99,7 @@ P_GetMobjState
 	return S_NULL;
 	}
 
-	return (statenum_t)((mobj->state - &states[S_NULL]) / sizeof(state_t*));
+	return (statenum_t)((mobj->state - states));
 }
 
 //
