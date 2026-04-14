@@ -21,6 +21,7 @@
 #define __P_TICK__
 
 
+extern int	leveltime;
 
 
 // Called by C_Ticker,

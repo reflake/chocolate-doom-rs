@@ -89,6 +89,16 @@ P_SetMobjState
     return true;
 }
 
+statenum_t P_GetMobjState( mobj_t*	mobj )
+{
+	if (mobj->state == NULL)
+	{
+		return S_NULL;
+	}
+
+	return (statenum_t)((mobj->state - states));
+}
+
 
 //
 // P_ExplodeMissile  
