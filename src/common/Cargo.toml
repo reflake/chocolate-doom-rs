@@ -10,3 +10,9 @@ bitflags = "2.11.0"
 
 [lib]
 path = "lib.rs"
+
+[profile.release]
+overflow-checks = false
+
+[profile.dev]
+overflow-checks = false

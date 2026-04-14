@@ -11,3 +11,9 @@ common = { path = "../common" }
 
 [lib]
 crate-type=["staticlib"]
+
+[profile.release]
+overflow-checks = false
+
+[profile.dev]
+overflow-checks = false
